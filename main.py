@@ -51,7 +51,7 @@ async def check_reddit():
 
                         ids.append(post_id)
                         print(f"Match Found: {title}")
-                        await channel.send(f"@{USER_ID}\n{title}\n{post_link}\n{loan_link}")
+                        await channel.send(f"<@{USER_ID}>\n{title}\n{post_link}\n{loan_link}")
                             
         if len(ids) > 3:
             ids = ids[-3:]
