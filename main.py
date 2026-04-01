@@ -1,27 +1,52 @@
 import os
 import webserver
+import requests
 import discord
 from discord.ext import commands
 
-# 1. Setup Intents (Permissions)
 intents = discord.Intents.default()
-intents.message_content = True  # Allows the bot to read messages
-
-# 2. Define the Bot and its command prefix
+intents.message_content = Tru
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Event: Runs when the bot is online
+subreddit = "AskReddit"
+url = f"https://www.reddit.com/r/{subreddit}/new.json?limit=3"
+CHANNEL_ID = 1488789667313614930
+
+@tasks.loop(seconds=30)
+async def check_reddit():
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+
+	try:
+	    response = requests.get(url)
+	    data = response.json()
+	    posts = data['data']['children']
+	    
+	    for post in reversed(posts):
+	        post_data = post['data']
+	        post_id = post_data['name']
+	        
+	        if post_id not in ids:
+				link = f"https://www.reddit.com{post_data['permalink']}"
+				
+	            print(f"New Post Found: {post_data['title']}")
+				await channel.send(f"**New r/{SUBREDDIT} post:**\n{title}\n{link}")
+	            ids.append(post_id)
+	    
+	    if len(ids) > 3:
+	        ids = list(ids)[-3:]
+	
+	except Exception as e:
+	    print(f"Error: {e}")
+
 @bot.event
 async def on_ready():
-		print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-		print('------')
+	check_reddit.start()
 
-# Command: Responds to !hello
 @bot.command()
 async def hello(ctx):
-		await ctx.send('Hello there! I am your Python bot.')
+	await ctx.send('Hello there! I am your Python bot.')
 
-# 3. Run the bot
-# Replace 'YOUR_TOKEN_HERE' with the token from the Developer Portal
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
