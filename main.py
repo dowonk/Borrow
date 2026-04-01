@@ -1,4 +1,5 @@
 import os
+import webserver
 import discord
 from discord.ext import commands
 
@@ -22,4 +23,5 @@ async def hello(ctx):
 
 # 3. Run the bot
 # Replace 'YOUR_TOKEN_HERE' with the token from the Developer Portal
+webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
