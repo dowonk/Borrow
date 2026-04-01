@@ -21,4 +21,4 @@ async def hello(ctx):
 
 # 3. Run the bot
 # Replace 'YOUR_TOKEN_HERE' with the token from the Developer Portal
-bot.run('MTQ4ODc4OTM1MTI5NDA0NjI1OA.GR7H4a.62aY3sphSU2tTaStuHPxEz1M0_y5rdDeCR8_H4')
+bot.run(os.environ['TOKEN'])
