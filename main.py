@@ -44,6 +44,7 @@ async def check_reddit():
 
 @bot.event
 async def on_ready():
+	print('Started')
 	check_reddit.start()
 
 @bot.command()
