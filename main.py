@@ -9,10 +9,9 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-SUBREDDIT = "Borrow"
-RSS_URL = f"https://www.reddit.com/r/{SUBREDDIT}/new.rss?limit=3"
+RSS_URL = f"https://www.reddit.com/r/Borrow/new.rss?limit=3"
 CHANNEL_ID = 1488789667313614930
-TARGET_USER_ID = 314300380051668994
+USER_ID = 314300380051668994
 
 ids = []
 
@@ -32,26 +31,26 @@ async def check_reddit():
             if post_id not in ids:
                 title = entry.title
                 title_lower = title.lower()
-                link = entry.link
-
+                
                 if (
-                    "[req]" in title_lower
+                    "req" in title_lower
                     and "arranged" not in title_lower
                     and "ca)" not in title_lower
                     and "can)" not in title_lower
                 ):
+                    post_link = entry.link
+                    username = entry.author.replace("/u/", "")
+                    loan_link = f"https://redditloans.com/loans.html?username={username}"
                     amount_match = re.search(r"\$(\d+)", title)
 
                     if amount_match:
                         amount = int(amount_match.group(1))
 
                         if amount <= 200:
+                            ids.append(post_id)
                             print(f"Match Found: {title}")
-                            mention = f"<@{TARGET_USER_ID}>"
-                            await channel.send(f"{mention} {title}\n{link}")
-
-                    ids.append(post_id)
-
+                            await channel.send(f"@{USER_ID}\n{title}\n{post_link}\n{loan_link}")
+                            
         if len(ids) > 3:
             ids = ids[-3:]
 
@@ -62,6 +61,10 @@ async def check_reddit():
 async def on_ready():
     print("Running")
     check_reddit.start()
+
+@bot.command()
+async def hello(ctx):
+    await ctx.send(f"Hello!")
 
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
