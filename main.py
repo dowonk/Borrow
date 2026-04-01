@@ -35,6 +35,7 @@ async def check_reddit():
                 if (
                     "req" in title_lower
                     and "arranged" not in title_lower
+                    and "canada" not in title_lower
                     and "ca)" not in title_lower
                     and "can)" not in title_lower
                 ):
