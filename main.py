@@ -5,12 +5,14 @@ import discord
 from discord.ext import commands
 
 intents = discord.Intents.default()
-intents.message_content = Tru
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 subreddit = "AskReddit"
 url = f"https://www.reddit.com/r/{subreddit}/new.json?limit=3"
 CHANNEL_ID = 1488789667313614930
+
+ids = []
 
 @tasks.loop(seconds=30)
 async def check_reddit():
@@ -31,7 +33,7 @@ async def check_reddit():
 				link = f"https://www.reddit.com{post_data['permalink']}"
 				
 	            print(f"New Post Found: {post_data['title']}")
-				await channel.send(f"**New r/{SUBREDDIT} post:**\n{title}\n{link}")
+				await channel.send(f"{title}\n{link}")
 	            ids.append(post_id)
 	    
 	    if len(ids) > 3:
@@ -46,7 +48,7 @@ async def on_ready():
 
 @bot.command()
 async def hello(ctx):
-	await ctx.send('Hello there! I am your Python bot.')
+	await ctx.send('Hello!')
 
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
