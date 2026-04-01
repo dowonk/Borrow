@@ -16,31 +16,31 @@ ids = []
 
 @tasks.loop(seconds=30)
 async def check_reddit():
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
+	channel = bot.get_channel(CHANNEL_ID)
+	if not channel:
+		return
 
 	try:
-	    response = requests.get(url)
-	    data = response.json()
-	    posts = data['data']['children']
+		response = requests.get(url)
+		data = response.json()
+		posts = data['data']['children']
 	    
-	    for post in reversed(posts):
-	        post_data = post['data']
-	        post_id = post_data['name']
+		for post in reversed(posts):
+			post_data = post['data']
+			post_id = post_data['name']
 	        
-	        if post_id not in ids:
+			if post_id not in ids:
 				link = f"https://www.reddit.com{post_data['permalink']}"
 				
-	            print(f"New Post Found: {post_data['title']}")
+				print(f"New Post Found: {post_data['title']}")
 				await channel.send(f"{title}\n{link}")
-	            ids.append(post_id)
+				ids.append(post_id)
 	    
-	    if len(ids) > 3:
-	        ids = list(ids)[-3:]
+		if len(ids) > 3:
+			ids = list(ids)[-3:]
 	
 	except Exception as e:
-	    print(f"Error: {e}")
+		print(f"Error: {e}")
 
 @bot.event
 async def on_ready():
