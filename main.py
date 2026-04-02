@@ -47,7 +47,7 @@ async def check_reddit():
                 and "ca)" not in title_lower
                 and "can)" not in title_lower
             ):
-                amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
+                amount = int(re.search(r"\d+", title).group())
                 
                 if amount <= 200:
                     post_link = entry.link
