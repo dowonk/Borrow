@@ -36,6 +36,7 @@ async def check_reddit():
                 post_link = entry.link
                 username = entry.author.replace("/u/", "")
                 loan_link = f"https://redditloans.com/loans.html?username={username}"
+                usl_link = f"https://www.universalscammerlist.com/?username={username}"
 
                 amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
                 
@@ -55,7 +56,7 @@ async def check_reddit():
                         continue
                     else:
                         print(f"Match Found: {title}")
-                        await channel.send(f"<@{USER_ID}>\n{post_id}\n{title}\n<{post_link}>\n{loan_link}")
+                        await channel.send(f"<@{USER_ID}>\n{post_id}\n{title}\n<{post_link}>\n{loan_link}\n{usl_link}")
                             
     except Exception as e:
         print(f"Error: {e}")
