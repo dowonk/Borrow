@@ -42,8 +42,8 @@ async def check_reddit():
             
             if (
                 "req" in title_lower
-                and "arrange" not in title_lower
-                and ("us)" in title_lower or "usa)" in title_lower or "u.s.)" in title_lower or "u.s.a)" in title_lower or "unite" in title_lower)
+                and "arranged" not in title_lower
+                and ("us)" in title_lower or "usa)" in title_lower or "u.s.)" in title_lower or "u.s.a)" in title_lower or "united" in title_lower)
             ):
                 amount = int(re.search(r"\d+", title).group())
                 
