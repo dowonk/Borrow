@@ -23,6 +23,20 @@ async def check_reddit():
         feed = feedparser.parse(RSS_URL, agent="Discord-Borrow-Bot-v1.0")
 
         for entry in feed.entries:
+            messages = []
+            
+            async for msg in channel.history(limit=10):
+                if msg.author == bot.user:
+                    messages.append(msg.content.lower())
+            
+                if len(messages) == 10:
+                    break
+            
+            post_id = entry.id.split('/')[-1]
+            
+            if any(post_id in msg for msg in messages):
+                continue
+            
             title = entry.title
             title_lower = title.lower()
             
@@ -33,30 +47,15 @@ async def check_reddit():
                 and "ca)" not in title_lower
                 and "can)" not in title_lower
             ):
-                post_link = entry.link
-                username = entry.author.replace("/u/", "")
-                loan_link = f"https://redditloans.com/loans.html?username={username}"
-                usl_link = f"https://www.universalscammerlist.com/?username={username}"
-
                 amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
                 
                 if amount <= 200:
-                    messages = []
+                    post_link = entry.link
+                    username = entry.author.replace("/u/", "")
+                    loan_link = f"https://redditloans.com/loans.html?username={username}"
+                    usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
-                    async for message in channel.history(limit=10):
-                        if message.author == bot.user:
-                            messages.append(message.content.lower())
-                        
-                        if len(messages) == 3:
-                            break
-
-                    post_id = entry.id.split('/')[-1]
-                    
-                    if any(post_id in msg for msg in messages):
-                        continue
-                    else:
-                        print(f"Match Found: {title}")
-                        await channel.send(f"<@{USER_ID}>\n{post_id}\n{title}\n<{post_link}>\n{loan_link}\n{usl_link}")
+                    await channel.send(f"<@{USER_ID}>\n{post_id}\n{title}\n<{post_link}>\n{loan_link}\n{usl_link}")
                             
     except Exception as e:
         print(f"Error: {e}")
