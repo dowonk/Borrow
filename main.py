@@ -13,11 +13,8 @@ RSS_URL = f"https://www.reddit.com/r/Borrow/new.rss?limit=3"
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 
-ids = []
-
 @tasks.loop(seconds=10)
 async def check_reddit():
-    global ids
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
         return
@@ -26,44 +23,39 @@ async def check_reddit():
         feed = feedparser.parse(RSS_URL, agent="Discord-Borrow-Bot-v1.0")
 
         for entry in feed.entries:
-            post_id = entry.id
+            title = entry.title
+            title_lower = title.lower()
+            
+            if (
+                "req" in title_lower
+                and "arranged" not in title_lower
+                and "canada" not in title_lower
+                and "ca)" not in title_lower
+                and "can)" not in title_lower
+            ):
+                post_link = entry.link
+                username = entry.author.replace("/u/", "")
+                loan_link = f"https://redditloans.com/loans.html?username={username}"
 
-            if post_id not in ids:
-                title = entry.title
-                title_lower = title.lower()
+                amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
                 
-                if (
-                    "req" in title_lower
-                    and "arranged" not in title_lower
-                    and "canada" not in title_lower
-                    and "ca)" not in title_lower
-                    and "can)" not in title_lower
-                ):
-                    post_link = entry.link
-                    username = entry.author.replace("/u/", "")
-                    loan_link = f"https://redditloans.com/loans.html?username={username}"
-
-                    amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
+                if amount <= 200:
+                    messages = []
                     
-                    if amount <= 200:
-                        messages = []
+                    async for message in channel.history(limit=10):
+                        if message.author == bot.user:
+                            messages.append(message.content.lower())
                         
-                        async for message in channel.history(limit=10):
-                            if message.author == bot.user:
-                                messages.append(message.content.lower())
-                            
-                            if len(messages) == 3:
-                                break
-                        
-                        if any(entry.id in msg for msg in messages):
-                            continue
-                        else:                                
-                            print(f"Match Found: {title}")
-                            await channel.send(f"<@{USER_ID}>\n{entry.id}\n{title}\n<{post_link}>\n{loan_link}")
-                            
-                            ids.append(post_id)
-                            if len(ids) > 3:
-                                ids = ids[-3:]
+                        if len(messages) == 3:
+                            break
+
+                    post_id = entry.id.split('/')[-1]
+                    
+                    if any(post_id in msg for msg in messages):
+                        continue
+                    else:
+                        print(f"Match Found: {title}")
+                        await channel.send(f"<@{USER_ID}>\n{post_id}\n{title}\n<{post_link}>\n{loan_link}")
                             
     except Exception as e:
         print(f"Error: {e}")
