@@ -56,20 +56,6 @@ async def check_reddit():
         feed = feedparser.parse(RSS_URL, agent="Discord-Borrow-Bot-v1.0")
 
         for entry in feed.entries:
-            messages = []
-            
-            async for msg in channel.history(limit=5):
-                if msg.author == bot.user:
-                    messages.append(msg.content.lower())
-            
-                if len(messages) == 5:
-                    break
-            
-            post_id = entry.id.split('/')[-1]
-            
-            if any(post_id in msg for msg in messages):
-                continue
-            
             title = entry.title
             title_lower = title.lower()
             
@@ -81,6 +67,20 @@ async def check_reddit():
                 amount = int(re.search(r"\d+", title).group())
                 
                 if amount <= 200:
+                    messages = []
+                    
+                    async for msg in channel.history(limit=5):
+                        if msg.author == bot.user:
+                            messages.append(msg.content.lower())
+                    
+                        if len(messages) == 5:
+                            break
+                    
+                    post_id = entry.id.split('/')[-1]
+                    
+                    if any(post_id in msg for msg in messages):
+                        continue
+                
                     post_link = entry.link
                     username = entry.author.replace("/u/", "")
                     user_stats = get_reddit_user_stats(username)
