@@ -58,7 +58,12 @@ async def check_reddit():
 
 @bot.event
 async def on_ready():
-    print("Running")
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+        
+    print("Booted up!")
+    await channel.send("Booted up!")
     check_reddit.start()
 
 @bot.command()
