@@ -41,7 +41,7 @@ def get_reddit_user_stats(username):
         if years == 0:
             age_string = f"{months} months"
         
-        return (f"Karma: {total_karma}\nAccount Age: {age_string}")
+        return (f"Karma: {total_karma} Age: {age_string}")
 
     except Exception as e:
         print(f"Error: {e}")
