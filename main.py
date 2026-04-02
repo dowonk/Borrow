@@ -58,11 +58,11 @@ async def check_reddit():
         for entry in feed.entries:
             messages = []
             
-            async for msg in channel.history(limit=10):
+            async for msg in channel.history(limit=5):
                 if msg.author == bot.user:
                     messages.append(msg.content.lower())
             
-                if len(messages) == 10:
+                if len(messages) == 5:
                     break
             
             post_id = entry.id.split('/')[-1]
