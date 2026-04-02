@@ -15,7 +15,7 @@ USER_ID = 314300380051668994
 
 ids = []
 
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=10)
 async def check_reddit():
     global ids
     channel = bot.get_channel(CHANNEL_ID)
