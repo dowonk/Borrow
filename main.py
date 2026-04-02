@@ -46,12 +46,24 @@ async def check_reddit():
                     amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
                     
                     if amount <= 200:
-                        print(f"Match Found: {title}")
-                        await channel.send(f"<@{USER_ID}>\n{title}\n<{post_link}>\n{loan_link}")
-
-                        ids.append(post_id)
-                        if len(ids) > 3:
-                            ids = ids[-3:]
+                        messages = []
+                        
+                        async for message in channel.history(limit=10):
+                            if message.author == bot.user:
+                                messages.append(message.content.lower())
+                            
+                            if len(messages) == 3:
+                                break
+                        
+                        if any(entry.id in msg for msg in messages):
+                            continue
+                        else:                                
+                            print(f"Match Found: {title}")
+                            await channel.send(f"<@{USER_ID}>\n{entry.id}\n{title}\n<{post_link}>\n{loan_link}")
+                            
+                            ids.append(post_id)
+                            if len(ids) > 3:
+                                ids = ids[-3:]
                             
     except Exception as e:
         print(f"Error: {e}")
