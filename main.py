@@ -47,7 +47,7 @@ async def check_reddit():
                     
                     if amount <= 200:
                         print(f"Match Found: {title}")
-                        await channel.send(f"<@{USER_ID}>\n{title}\n{post_link}\n{loan_link}")
+                        await channel.send(f"<@{USER_ID}>\n{title}\n<{post_link}>\n{loan_link}")
 
                         ids.append(post_id)
                         if len(ids) > 3:
