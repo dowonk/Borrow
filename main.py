@@ -43,19 +43,16 @@ async def check_reddit():
                     username = entry.author.replace("/u/", "")
                     loan_link = f"https://redditloans.com/loans.html?username={username}"
 
-                    amount = 200
-                    amount_reached = any(int(match.group()) > amount for match in re.finditer(r"\d+", text))
-
-                    if amount_reached:
-                        continue
-
-                        ids.append(post_id)
+                    amount = int(re.search(r"\[REQ\]\s*\([^\d]*(\d+)", title).group(1))
+                    
+                    if amount <= 200:
                         print(f"Match Found: {title}")
                         await channel.send(f"<@{USER_ID}>\n{title}\n{post_link}\n{loan_link}")
-                            
-        if len(ids) > 3:
-            ids = ids[-3:]
 
+                        ids.append(post_id)
+                        if len(ids) > 3:
+                            ids = ids[-3:]
+                            
     except Exception as e:
         print(f"Error: {e}")
 
