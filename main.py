@@ -84,7 +84,14 @@ async def check_reddit():
                     loan_link = f"https://redditloans.com/loans.html?username={username}"
                     usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
-                    await channel.send(f"<@{USER_ID}>\n{post_id}\n{user_stats}\n{title}\n<{post_link}>\n{loan_link}\n<{usl_link}>")
+                    await channel.send(f"<@{USER_ID}>\n
+                        {post_id}\n
+                        {user_stats}\n
+                        {title}\n
+                        <{post_link}>\n
+                        {loan_link}\n<
+                        {usl_link}>"
+                    )
                             
     except Exception as e:
         print(f"Error: {e}")
