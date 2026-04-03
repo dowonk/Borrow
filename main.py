@@ -11,38 +11,56 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-RSS_URL = f"https://www.reddit.com/r/Borrow/new.rss?limit=3"
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 
-def get_reddituser_age_karma(username):
-    json_url = f"https://www.reddit.com/user/{username}/about.json"
+INTERVALS = (
+    ('Y', 31536000), ('MO', 2592000), ('D', 86400),
+    ('H', 3600), ('M', 60), ('S', 1)
+)
+
+def format_time_ago(timestamp):
+    diff = int(time.time() - timestamp)
+    for label, seconds in INTERVALS:
+        if diff >= seconds:
+            return f"{diff // seconds}{label}"
+    return "0s"
+
+def get_reddit_user_info(username, limit=5):
+    session = requests.Session()
+    session.headers.update({'User-Agent': 'Discord-Borrow-Bot-v1.0'})
     
     try:
-        response = requests.get(json_url, headers={'User-Agent': 'Discord-Borrow-Bot-v1.0'})
-        data = response.json()['data']
+        profile_res = session.get(f"https://www.reddit.com/user/{username}/about.json")
+        profile_res.raise_for_status()
+        p_data = profile_res.json()['data']
+        
+        user_id = p_data.get('id') 
+        age_str = format_time_ago(p_data['created_utc'])
+        karma = p_data.get('total_karma', 0)
 
-        total_karma = data.get('total_karma')
-        created_utc = data.get('created_utc')
-        
-        years = datetime.now().year - datetime.fromtimestamp(created_utc).year
-        months = datetime.now().month - datetime.fromtimestamp(created_utc).month
-        days = datetime.now().day - datetime.fromtimestamp(created_utc).day
+        output = [f"[{karma}][{age_str}]"]
 
-        if days < 0:
-            months -= 1
-        if months < 0:
-            years -= 1
-            months += 12
+        activity_res = session.get(f"https://www.reddit.com/user/{username}/overview.json", params={'limit': limit})
+        activity_res.raise_for_status()
         
-        age_string = f"{years}Y {months}M"
-        if years == 0:
-            age_string = f"{months}M"
+        for item in activity_res.json()['data']['children']:
+            data = item['data']
+            time_ago = format_time_ago(data['created_utc'])
+            sub = f"r/{data['subreddit']}"
+            
+            raw_content = data.get('title') or data.get('body', '')
+            content = raw_content.replace('\n', ' ')[:80]
+            
+            output.append(f"[{time_ago}][{sub}] {content}")
+
+        if user_id:
+            output.append(f"https://www.reddit.com/chat/user/t2_{user_id}")
         
-        return (f"[{age_string}] [{total_karma}]")
+        return "\n".join(output)
 
     except Exception as e:
-        print(f"Error: {e}")
+        return f"Error: {str(e)}"
 
 @tasks.loop(seconds=10)
 async def check_reddit():
@@ -51,7 +69,7 @@ async def check_reddit():
         return
 
     try:
-        feed = feedparser.parse(RSS_URL, agent="Discord-Borrow-Bot-v1.0")
+        feed = feedparser.parse(f"https://www.reddit.com/r/Borrow/new.rss?limit=3", agent="Discord-Borrow-Bot-v1.0")
 
         for entry in feed.entries:
             title = entry.title.lower()
@@ -80,14 +98,14 @@ async def check_reddit():
                 
                     post_link = entry.link
                     username = entry.author.replace("/u/", "")
-                    age_karma = get_reddituser_age_karma(username)
+                    user_info = get_reddit_user_info(username)
                     loan_link = f"https://redditloans.com/loans.html?username={username}"
                     usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
                     await channel.send(
                         f"<@{USER_ID}> {post_id}\n"
-                        f"**{age_karma}**\n"
                         f"**{title}**\n"
+                        f"{user_info}\n"
                         f"<{post_link}>\n"
                         f"{loan_link}\n"
                         f"<{usl_link}>"
