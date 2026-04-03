@@ -19,7 +19,7 @@ def get_reddituser_age_karma(username):
     json_url = f"https://www.reddit.com/user/{username}/about.json"
     
     try:
-        response = requests.get(json_url, headers={'User-Agent': 'Profile-Checker/1.0'})
+        response = requests.get(json_url, headers={'User-Agent': 'Discord-Borrow-Bot-v1.0'})
         data = response.json()['data']
 
         total_karma = data.get('total_karma')
@@ -35,11 +35,11 @@ def get_reddituser_age_karma(username):
             years -= 1
             months += 12
         
-        age_string = f"{years}y, {months}m"
+        age_string = f"{years}y{months}m"
         if years == 0:
             age_string = f"{months} months"
         
-        return (f"{age_string} [{total_karma}]")
+        return (f"[{age_string}] [{total_karma}]")
 
     except Exception as e:
         print(f"Error: {e}")
