@@ -39,9 +39,8 @@ def reddit_user_info(username, limit=5):
             content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:100]
             output.append(f"[{format_time_ago(d['created_utc'])}] **r/{d['subreddit']}** *{content}*")
 
-        if p_res.get('id'):
-            output.append(f"\n**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
-            
+        output.append(f"\n**Profile:** <https://www.reddit.com/user/{username}>")
+        output.append(f"\n**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
         output.append(f"**Loans:** https://redditloans.com/loans.html?username={username}")
         output.append(f"**USL:** <https://www.universalscammerlist.com/?username={username}>")
         
