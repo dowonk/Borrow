@@ -42,7 +42,7 @@ def reddit_user_info(username, limit=5):
         if p_res.get('id'):
             output.append(f"\n**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
             
-        output.append(f"**Loans:** https://redditloans.com/loans.html?username={username}\n")
+        output.append(f"**Loans:** https://redditloans.com/loans.html?username={username}")
         output.append(f"**USL:** <https://www.universalscammerlist.com/?username={username}>")
         
         return "\n".join(output)
