@@ -28,7 +28,7 @@ def format_time_ago(timestamp):
             return f"{diff // seconds}{label}"
     return "0s"
 
-def get_reddit_user_info(username, limit=5):
+def reddit_user_info(username, limit=5):
     try:
         p_res = SESSION.get(f"https://www.reddit.com/user/{username}/about.json").json()['data']
         output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}"]
@@ -40,7 +40,7 @@ def get_reddit_user_info(username, limit=5):
             output.append(f"[{format_time_ago(d['created_utc'])}] **r/{d['subreddit']}** *{content}*")
 
         if p_res.get('id'):
-            output.append(f"<https://www.reddit.com/chat/user/t2_{p_res['id']}>")
+            output.append(f"**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
         
         return "\n".join(output)
     except:
@@ -71,9 +71,9 @@ async def check_rborrow():
                         f"<@{USER_ID}> {post_id}\n"
                         f"**{entry.title}**\n"
                         f"<{entry.link}>\n\n"
-                        f"{get_reddit_user_info(username)}\n"
-                        f"https://redditloans.com/loans.html?username={username}\n"
-                        f"<https://www.universalscammerlist.com/?username={username}>"
+                        f"{reddit_user_info(username)}\n"
+                        f"**Loans:** https://redditloans.com/loans.html?username={username}\n"
+                        f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
                     )
     except Exception as e:
         print(f"Error: {e}")
