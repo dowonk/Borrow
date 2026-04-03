@@ -63,7 +63,7 @@ def get_reddit_user_info(username, limit=5):
         return f"Error: {str(e)}"
 
 @tasks.loop(seconds=10)
-async def check_reddit():
+async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
         return
@@ -122,7 +122,7 @@ async def on_ready():
         
     print("Booted up!")
     await channel.send("Booted up!")
-    check_reddit.start()
+    check_rborrow.start()
 
 @bot.command()
 async def hello(ctx):
