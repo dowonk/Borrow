@@ -106,7 +106,7 @@ async def check_rborrow():
                         f"<@{USER_ID}> {post_id}\n"
                         f"**{title}**\n"
                         f"<{post_link}>\n\n"
-                        f"{user_info}\n\n"
+                        f"{user_info}\n"
                         f"{loan_link}\n"
                         f"<{usl_link}>"
                     )
