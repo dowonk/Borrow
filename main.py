@@ -85,8 +85,8 @@ async def check_reddit():
                     usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
                     await channel.send(
-                        f"<@{USER_ID}>\n"
-                        f"**{age_karma}** {post_id}\n"
+                        f"<@{USER_ID}> {post_id}\n"
+                        f"**{age_karma}**\n"
                         f"{title}\n"
                         f"<{post_link}>\n"
                         f"{loan_link}\n"
