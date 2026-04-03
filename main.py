@@ -15,7 +15,7 @@ RSS_URL = f"https://www.reddit.com/r/Borrow/new.rss?limit=3"
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 
-def get_reddit_karma_age(username):
+def get_reddituser_age_karma(username):
     json_url = f"https://www.reddit.com/user/{username}/about.json"
     
     try:
@@ -39,7 +39,7 @@ def get_reddit_karma_age(username):
         if years == 0:
             age_string = f"{months} months"
         
-        return (f"**{age_string} [{total_karma}]**")
+        return (f"{age_string} [{total_karma}]")
 
     except Exception as e:
         print(f"Error: {e}")
@@ -80,19 +80,19 @@ async def check_reddit():
                 
                     post_link = entry.link
                     username = entry.author.replace("/u/", "")
-                    user_stats = get_reddit_karma_age(username)
+                    age_karma = get_reddituser_age_karma(username)
                     loan_link = f"https://redditloans.com/loans.html?username={username}"
                     usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
-                    await channel.send(f"<@{USER_ID}>\n
-                        {post_id}\n
-                        {user_stats}\n
-                        {title}\n
-                        <{post_link}>\n
-                        {loan_link}\n
-                        <{usl_link}>"
+                    await channel.send(
+                        f"<@{USER_ID}>\n"
+                        f"**{age_karma}** {post_id}\n"
+                        f"{title}\n"
+                        f"<{post_link}>\n"
+                        f"{loan_link}\n"
+                        f"<{usl_link}>"
                     )
-                            
+                    
     except Exception as e:
         print(f"Error: {e}")
 
