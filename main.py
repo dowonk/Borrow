@@ -31,12 +31,12 @@ def format_time_ago(timestamp):
 def reddit_user_info(username, limit=5):
     try:
         p_res = SESSION.get(f"https://www.reddit.com/user/{username}/about.json").json()['data']
-        output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}"]
+        output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}\n"]
 
         a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview.json", params={'limit': limit}).json()
         for item in a_res['data']['children']:
             d = item['data']
-            content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:80]
+            content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:100]
             output.append(f"[{format_time_ago(d['created_utc'])}] **r/{d['subreddit']}** *{content}*")
 
         if p_res.get('id'):
@@ -67,7 +67,7 @@ async def check_rborrow():
                 not any(post_id in msg for msg in history)):
                 
                 amount_match = re.search(r"\d+", title)
-                if amount_match and int(amount_match.group()) <= 300:
+                if amount_match and int(amount_match.group()) <= 200:
                     username = entry.author.replace("/u/", "")
                     
                     await channel.send(
