@@ -15,7 +15,7 @@ RSS_URL = f"https://www.reddit.com/r/Borrow/new.rss?limit=3"
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 
-def get_reddit_user_stats(username):
+def get_reddit_karma_age(username):
     json_url = f"https://www.reddit.com/user/{username}/about.json"
     
     try:
@@ -24,12 +24,10 @@ def get_reddit_user_stats(username):
 
         total_karma = data.get('total_karma')
         created_utc = data.get('created_utc')
-        creation_date = datetime.fromtimestamp(created_utc)
-        now = datetime.now()
         
-        years = now.year - creation_date.year
-        months = now.month - creation_date.month
-        days = now.day - creation_date.day
+        years = datetime.now().year - datetime.fromtimestamp(created_utc).year
+        months = datetime.now().month - datetime.fromtimestamp(created_utc).month
+        days = datetime.now().day - datetime.fromtimestamp(created_utc).day
 
         if days < 0:
             months -= 1
@@ -41,7 +39,7 @@ def get_reddit_user_stats(username):
         if years == 0:
             age_string = f"{months} months"
         
-        return (f"Karma: {total_karma} Age: {age_string}")
+        return (f"**{age_string} [{total_karma}]**")
 
     except Exception as e:
         print(f"Error: {e}")
@@ -56,13 +54,12 @@ async def check_reddit():
         feed = feedparser.parse(RSS_URL, agent="Discord-Borrow-Bot-v1.0")
 
         for entry in feed.entries:
-            title = entry.title
-            title_lower = title.lower()
+            title = entry.title.lower()
             
             if (
-                "req" in title_lower
-                and "arranged" not in title_lower
-                and ("us)" in title_lower or "usa)" in title_lower or "u.s.)" in title_lower or "u.s.a)" in title_lower or "u.s.a.)" in title_lower or "united" in title_lower)
+                "req" in title
+                and "arranged" not in title
+                and ("us)" in title or "usa)" in title or "u.s.)" in title or "u.s.a)" in title or "u.s.a.)" in title or "united" in title)
             ):
                 amount = int(re.search(r"\d+", title).group())
                 
@@ -83,7 +80,7 @@ async def check_reddit():
                 
                     post_link = entry.link
                     username = entry.author.replace("/u/", "")
-                    user_stats = get_reddit_user_stats(username)
+                    user_stats = get_reddit_karma_age(username)
                     loan_link = f"https://redditloans.com/loans.html?username={username}"
                     usl_link = f"https://www.universalscammerlist.com/?username={username}"
                     
