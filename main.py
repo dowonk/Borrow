@@ -35,9 +35,9 @@ def get_reddituser_age_karma(username):
             years -= 1
             months += 12
         
-        age_string = f"{years}y{months}m"
+        age_string = f"{years}Y{months}M"
         if years == 0:
-            age_string = f"{months} months"
+            age_string = f"{months}M"
         
         return (f"[{age_string}] [{total_karma}]")
 
