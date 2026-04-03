@@ -89,8 +89,8 @@ async def check_reddit():
                         {user_stats}\n
                         {title}\n
                         <{post_link}>\n
-                        {loan_link}\n<
-                        {usl_link}>"
+                        {loan_link}\n
+                        <{usl_link}>"
                     )
                             
     except Exception as e:
