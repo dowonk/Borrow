@@ -31,13 +31,13 @@ def format_time_ago(timestamp):
 def get_reddit_user_info(username, limit=5):
     try:
         p_res = SESSION.get(f"https://www.reddit.com/user/{username}/about.json").json()['data']
-        output = [f"[{p_res.get('total_karma', 0)}][{format_time_ago(p_res['created_utc'])}]"]
+        output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}"]
 
         a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview.json", params={'limit': limit}).json()
         for item in a_res['data']['children']:
             d = item['data']
             content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:80]
-            output.append(f"[{format_time_ago(d['created_utc'])}][r/{d['subreddit']}] {content}")
+            output.append(f"[{format_time_ago(d['created_utc'])}] **r/{d['subreddit']}** *{content}*")
 
         if p_res.get('id'):
             output.append(f"<https://www.reddit.com/chat/user/t2_{p_res['id']}>")
