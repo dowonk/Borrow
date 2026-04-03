@@ -55,7 +55,7 @@ def get_reddit_user_info(username, limit=5):
             output.append(f"[{time_ago}][{sub}] {content}")
 
         if user_id:
-            output.append(f"https://www.reddit.com/chat/user/t2_{user_id}")
+            output.append(f"<https://www.reddit.com/chat/user/t2_{user_id}>")
         
         return "\n".join(output)
 
