@@ -35,7 +35,7 @@ def get_reddituser_age_karma(username):
             years -= 1
             months += 12
         
-        age_string = f"{years}Y{months}M"
+        age_string = f"{years}Y {months}M"
         if years == 0:
             age_string = f"{months}M"
         
@@ -87,7 +87,7 @@ async def check_reddit():
                     await channel.send(
                         f"<@{USER_ID}> {post_id}\n"
                         f"**{age_karma}**\n"
-                        f"{title}\n"
+                        f"**{title}**\n"
                         f"<{post_link}>\n"
                         f"{loan_link}\n"
                         f"<{usl_link}>"
