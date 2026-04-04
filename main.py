@@ -3,6 +3,7 @@ import re
 import time
 import asyncio
 import asyncpraw
+import webserver
 import discord
 from discord.ext import commands, tasks
 
@@ -86,4 +87,5 @@ async def on_ready():
     check_rborrow.start()
     await channel.send("Booted up!")
 
+webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
