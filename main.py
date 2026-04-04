@@ -1,28 +1,16 @@
 import os
 import re
 import time
-import praw
+import asyncio
+import asyncpraw
 import discord
-import webserver
 from discord.ext import commands, tasks
 
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
+INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 
-reddit = praw.Reddit(
-    client_id=os.environ['CLIENT_ID'],
-    client_secret=os.environ['CLIENT_SECRET'],
-    user_agent="Discord-Borrow-Bot-v1.1 by /u/YourUsername"
-)
-
-intents = discord.Intents.default()
-intents.message_content = True
-bot = commands.Bot(command_prefix="!", intents=intents)
-
-INTERVALS = (
-    ('Y', 31536000), ('MO', 2592000), ('D', 86400),
-    ('H', 3600), ('M', 60), ('S', 1)
-)
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
@@ -31,88 +19,71 @@ def format_time_ago(timestamp):
             return f"{diff // seconds}{label}"
     return "0s"
 
-def get_reddit_user_info(username):
+async def get_reddit_user_info(redditor):
     try:
-        redditor = reddit.redditor(username)
-        
-        total_karma = redditor.link_karma + redditor.comment_karma
-        tracked_subs = {"borrownew", "simpleloans", "borrow"}
-        activity_count = 0
-        
-        for item in redditor.new:
-            if item.subreddit.display_name.lower() in tracked_subs:
-                activity_count += 1
+        await redditor.load()
+        TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "simpleloans"}
+        karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
 
-        output = [
-            f"**Karma:** {total_karma} **Age:** {format_time_ago(redditor.created_utc)} **Activity in {', '.join(tracked_subs)}:** {activity_count}"
-        ]
+        activity = []
+        count = 0
+        async for item in redditor.new(limit=100):
+            activity.append(item)
+            if item.subreddit.display_name.lower() in TRACKED_SUBS:
+                count += 1
 
-        for item in redditor.new(limit=5):
-            content = (getattr(item, 'title', '') or getattr(item, 'body', ''))
-            content = content.replace('\n', ' ')[:100]
-            output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{content}*")
+        output = [f"**Karma:** *{karma}* **Age:** *{format_time_ago(redditor.created_utc)}* **Other Lending Subreddits:** *{count}*"]
 
-        output.extend([
+        for item in activity[:5]:
+            text = getattr(item, 'title', getattr(item, 'body', ''))
+            text = text.replace('\n', ' ')[:100]
+            output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
+
+        links = [
             f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
             f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
             f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
             f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
-        ])
-
-        return "\n".join(output)
-
-    except Exception:
-        return "⚠️ *User info unavailable (Account may be deleted or shadow-banned).* "
+        ]
+        return "\n".join(output + links)
+        
+    except Exception as e:
+        print(f"Error: {e}")
 
 @tasks.loop(seconds=30)
 async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
+    if not channel: return
 
     try:
-        subreddit = reddit.subreddit("Borrow")
-        history = [m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user]
+        subreddit = await reddit.subreddit("Borrow")
+        history = [m.content.lower() async for m in channel.history(limit=15) if m.author == bot.user]
 
-        for submission in subreddit.new(limit=3):
-            title = submission.title.lower()
-            post_id = submission.id
-
-            is_req = "req" in title
-            is_not_arranged = "arranged" not in title
-            is_us = re.search(r"(us\)|usa\)|u\.s\.\)|united)", title)
-            is_new = not any(post_id in msg for msg in history)
-
-            if is_req and is_not_arranged and is_us and is_new:
-                amount_match = re.search(r"\d+", title)
-                if amount_match:
-                    amount = int(amount_match.group())
-
-                    if amount <= 200:
-                        user_data = get_reddit_user_info(submission.author)
-
-                        message = (
-                            f"<@{USER_ID}> `{post_id}`\n"
-                            f"**{submission.title}**\n"
-                            f"<{submission.url}>\n\n"
-                            f"{user_data}"
-                        )
-                        await channel.send(message)
-
+        async for post in subreddit.new(limit=5):
+            title = post.title.lower()
+            if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa\)|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
+                match = re.compile(r"\d+").search(title)
+                if match and int(match.group()) <= 200:
+                    selftext = f"\n{post.selftext}" if post.selftext else ""
+                    user_info = await get_reddit_user_info(post.author)
+                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
+                    
     except Exception as e:
-        print(f"Error in background task: {e}")
+        print(f"Error: {e}")
 
 @bot.event
 async def on_ready():
+    global reddit
+    reddit = asyncpraw.Reddit(
+        client_id=os.environ['CLIENT_ID'],
+        client_secret=os.environ['CLIENT_SECRET'],
+        user_agent="Discord-Borrow-Bot-v1"
+    )
+    
     channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
-    await channel.send("Booted up")
+    if not channel: return
+        
     check_rborrow.start()
+    await channel.send("Booted up!")
 
-@bot.command()
-async def hello(ctx):
-    await ctx.send("Hello!")
-
-webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
