@@ -42,9 +42,7 @@ def get_reddit_user_info(redditor):
                 activity_count += 1
 
         output = [
-            f"**Karma:** {total_karma} | **Age:** {format_time_ago(redditor.created_utc)}",
-            f"**Activity in {', '.join(tracked_subs)} (Last 100):** {activity_count}",
-            "\n**Recent Activity:**"
+            f"**Karma:** {total_karma} **Age:** {format_time_ago(redditor.created_utc)} **Activity in {', '.join(tracked_subs)}:** {activity_count}"
         ]
 
         for item in redditor.new(limit=5):
