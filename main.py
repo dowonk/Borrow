@@ -33,7 +33,7 @@ async def get_reddit_user_info(redditor):
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
 
-        output = [f"{karma} **karma**\n{format_time_ago(redditor.created_utc)} **old**\n{count} **lending subreddits**\n"]
+        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{count}*\n"]
 
         for item in activity[:5]:
             text = getattr(item, 'title', getattr(item, 'body', ''))
@@ -58,7 +58,7 @@ async def check_rborrow():
 
     try:
         subreddit = await reddit.subreddit("Borrow")
-        history = [m.content.lower() async for m in channel.history(limit=3) if m.author == bot.user]
+        history = [m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user]
 
         async for post in subreddit.new(limit=3):
             title = post.title.lower()
