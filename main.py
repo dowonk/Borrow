@@ -33,7 +33,7 @@ async def get_reddit_user_info(redditor):
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
 
-        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Other Lending Subreddits:** *{count}*\n\n"]
+        output = [f"{karma} **karma**\n{format_time_ago(redditor.created_utc)} **old**\n*{count}* **lending subreddits**\n"]
 
         for item in activity[:5]:
             text = getattr(item, 'title', getattr(item, 'body', ''))
@@ -67,7 +67,7 @@ async def check_rborrow():
                 if match and int(match.group()) <= 200:
                     selftext = f"\n{post.selftext}" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
-                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
+                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n{user_info}")
                     
     except Exception as e:
         print(f"Error: {e}")
