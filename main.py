@@ -52,7 +52,6 @@ def get_reddit_user_info(redditor):
             content = content.replace('\n', ' ')[:100]
             output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{content}*")
 
-        # 3. Append Links
         output.extend([
             f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
             f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
