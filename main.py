@@ -84,9 +84,8 @@ async def on_ready():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel: return
         
-    channel.send('Booted up!')
-    if not check_rborrow.is_running():
-        check_rborrow.start()
+    await channel.send('Booted up!')
+    check_rborrow.start()
 
 @bot.command()
 async def hello(ctx):
