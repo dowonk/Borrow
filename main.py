@@ -27,7 +27,7 @@ async def get_reddit_user_info(redditor):
 
         activity = []
         count = 0
-        async for item in redditor.new(limit=100):
+        async for item in redditor.new:
             activity.append(item)
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
@@ -57,9 +57,9 @@ async def check_rborrow():
 
     try:
         subreddit = await reddit.subreddit("Borrow")
-        history = [m.content.lower() async for m in channel.history(limit=15) if m.author == bot.user]
+        history = [m.content.lower() async for m in channel.history(limit=3) if m.author == bot.user]
 
-        async for post in subreddit.new(limit=5):
+        async for post in subreddit.new(limit=3):
             title = post.title.lower()
             if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa\)|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
                 match = re.compile(r"\d+").search(title)
