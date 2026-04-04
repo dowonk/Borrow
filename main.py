@@ -81,7 +81,10 @@ async def check_rborrow():
 
 @bot.event
 async def on_ready():
-    print("Booted up!")
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel: return
+        
+    channel.send('Booted up!')
     if not check_rborrow.is_running():
         check_rborrow.start()
 
