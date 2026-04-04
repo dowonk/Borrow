@@ -32,7 +32,7 @@ async def get_reddit_user_info(redditor):
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
 
-        output = [f"**Karma:** *{karma}* **Age:** *{format_time_ago(redditor.created_utc)}* **Other Lending Subreddits:** *{count}*"]
+        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Other Lending Subreddits:** *{count}*\n\n"]
 
         for item in activity[:5]:
             text = getattr(item, 'title', getattr(item, 'body', ''))
