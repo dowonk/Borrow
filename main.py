@@ -33,7 +33,7 @@ async def get_reddit_user_info(redditor):
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
 
-        output = [f"\n**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{count}*\n"]
+        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{count}*\n\n"]
 
         for item in activity[:5]:
             text = getattr(item, 'title', getattr(item, 'body', ''))
@@ -41,7 +41,7 @@ async def get_reddit_user_info(redditor):
             output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
 
         links = [
-            f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
+            f"**Profile:** <https://www.reddit.com/user/{redditor.name}>",
             f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
             f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
             f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
@@ -67,7 +67,7 @@ async def check_rborrow():
                 if match and int(match.group()) <= 200:
                     selftext = f"\n{post.selftext}" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
-                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n{user_info}")
+                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
                     
     except Exception as e:
         print(f"Error: {e}")
