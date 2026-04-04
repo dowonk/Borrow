@@ -50,7 +50,7 @@ async def get_reddit_user_info(redditor):
     except Exception as e:
         print(f"Error: {e}")
 
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=10)
 async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel: return
