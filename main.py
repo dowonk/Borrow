@@ -35,10 +35,13 @@ async def get_reddit_user_info(redditor):
 
         output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{count}*\n"]
 
-        for item in activity[:5]:
-            text = getattr(item, 'title', getattr(item, 'body', ''))
-            text = text.replace('\n', ' ')[:100]
-            output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
+        if not activity:
+            output.append("*No posts/comments found.*\n")
+        else:
+            for item in activity[:5]:
+                text = getattr(item, 'title', getattr(item, 'body', ''))
+                text = text.replace('\n', ' ')[:100]
+                output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
 
         links = [
             f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
