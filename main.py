@@ -31,12 +31,14 @@ def format_time_ago(timestamp):
             return f"{diff // seconds}{label}"
     return "0s"
 
-def get_reddit_user_info(redditor):
+def get_reddit_user_info(username):
     try:
+        redditor = reddit.redditor(username)
+        
         total_karma = redditor.link_karma + redditor.comment_karma
         tracked_subs = {"borrownew", "simpleloans", "borrow"}
-        
         activity_count = 0
+        
         for item in redditor.new:
             if item.subreddit.display_name.lower() in tracked_subs:
                 activity_count += 1
