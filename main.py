@@ -33,14 +33,14 @@ def reddit_user_info(username, limit=5):
         p_res = SESSION.get(f"https://www.reddit.com/user/{username}/about.json").json()['data']
         output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}\n"]
 
-        a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview.json?limit=5", params={'limit': limit}).json()
+        a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview/.json?limit=5", params={'limit': limit}).json()
         for item in a_res['data']['children']:
             d = item['data']
             content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:100]
             output.append(f"[{format_time_ago(d['created_utc'])}] **r/{d['subreddit']}** *{content}*")
 
         output.append(f"\n**Profile:** <https://www.reddit.com/user/{username}>")
-        output.append(f"\n**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
+        output.append(f"**DM:** <https://www.reddit.com/chat/user/t2_{p_res['id']}>")
         output.append(f"**Loans:** https://redditloans.com/loans.html?username={username}")
         output.append(f"**USL:** <https://www.universalscammerlist.com/?username={username}>")
         
@@ -54,7 +54,7 @@ async def check_rborrow():
     if not channel: return
 
     try:
-        feed = feedparser.parse("https://www.reddit.com/r/Borrow/new.rss?limit=3", agent="Discord-Borrow-Bot-v1.0")
+        feed = feedparser.parse("https://www.reddit.com/r/Borrow/new/.rss?limit=3", agent="Discord-Borrow-Bot-v1.0")
         history = [m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user]
 
         for entry in feed.entries:
