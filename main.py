@@ -33,7 +33,7 @@ def reddit_user_info(username, limit=5):
         p_res = SESSION.get(f"https://www.reddit.com/user/{username}/about.json").json()['data']
         output = [f"**Karma:** {p_res.get('total_karma', 0)} **Age:** {format_time_ago(p_res['created_utc'])}\n"]
 
-        a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview.json", params={'limit': limit}).json()
+        a_res = SESSION.get(f"https://www.reddit.com/user/{username}/overview.json?limit=5", params={'limit': limit}).json()
         for item in a_res['data']['children']:
             d = item['data']
             content = (d.get('title') or d.get('body', '')).replace('\n', ' ')[:100]
