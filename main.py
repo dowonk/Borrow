@@ -28,7 +28,7 @@ async def get_reddit_user_info(redditor):
 
         activity = []
         count = 0
-        async for item in redditor.new:
+        async for item in redditor.new(limit=1000):
             activity.append(item)
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
                 count += 1
