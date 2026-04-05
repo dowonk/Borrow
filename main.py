@@ -72,7 +72,7 @@ async def check_rborrow():
                 continue
                 
             title = post.title.lower()
-            if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa\)|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
+            if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
                 amount_match = re.compile(r"\d+").search(title)
                 amount = int(amount_match.group())
                 if amount_match and amount <= 300:
