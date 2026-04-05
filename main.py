@@ -1,11 +1,13 @@
 import os
 import re
 import time
+from datetime import datetime, timedelta
 import asyncio
 import asyncpraw
 import webserver
 import discord
 from discord.ext import commands, tasks
+
 
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
@@ -27,13 +29,12 @@ async def get_reddit_user_info(redditor):
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
 
         activity = []
-        count = 0
         async for item in redditor.new(limit=1000):
             activity.append(item)
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
-                count += 1
+                return None
 
-        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{count}*\n"]
+        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n"]
 
         if not activity:
             output.append("*No posts/comments found.*\n")
@@ -63,13 +64,23 @@ async def check_rborrow():
         subreddit = await reddit.subreddit("Borrow")
         history = [m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user]
 
+        now = time.time()
+        twelve_hours_ago = now - (12 * 60 * 60)
+
         async for post in subreddit.new(limit=3):
+            if post.created_utc < twelve_hours_ago:
+                continue
+                
             title = post.title.lower()
             if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa\)|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
-                match = re.compile(r"\d+").search(title)
-                if match and int(match.group()) <= 200:
+                amount_match = re.compile(r"\d+").search(title)
+                amount = int(amount_match.group())
+                if amount_match and amount <= 200:
                     selftext = f"\n{post.selftext}" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
+                    if user_info == None
+                        continue
+                    
                     await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
                     
     except Exception as e:
