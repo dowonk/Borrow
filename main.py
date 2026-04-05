@@ -78,7 +78,7 @@ async def check_rborrow():
                 if amount_match and amount <= 300:
                     selftext = f"\n{post.selftext}" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
-                    if user_info == None
+                    if user_info == None:
                         continue
                     
                     await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
