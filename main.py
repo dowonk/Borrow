@@ -29,13 +29,12 @@ async def get_reddit_user_info(redditor):
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
 
         activity = []
-        forbidden_sub = false
         async for item in redditor.new(limit=1000):
             activity.append(item)
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
-                forbidden_sub = true
+                continue
 
-        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n**Lending Subreddits:** *{forbidden_sub}*\n"]
+        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n"]
 
         if not activity:
             output.append("*No posts/comments found.*\n")
