@@ -75,7 +75,7 @@ async def check_rborrow():
             if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa\)|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
                 amount_match = re.compile(r"\d+").search(title)
                 amount = int(amount_match.group())
-                if amount_match and amount <= 200:
+                if amount_match and amount <= 300:
                     selftext = f"\n{post.selftext}" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
                     if user_info == None
