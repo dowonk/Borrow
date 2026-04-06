@@ -32,7 +32,7 @@ async def get_reddit_user_info(redditor):
         async for item in redditor.new(limit=1000):
             activity.append(item)
             if item.subreddit.display_name.lower() in TRACKED_SUBS:
-                continue
+                return None
 
         output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n"]
 
