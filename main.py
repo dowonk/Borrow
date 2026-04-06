@@ -76,12 +76,12 @@ async def check_rborrow():
                 amount_match = re.compile(r"\d+").search(title)
                 amount = int(amount_match.group())
                 if amount_match and amount <= 300:
-                    selftext = f"\n{post.selftext}" if post.selftext else ""
+                    selftext = f"*{post.selftext}*" if post.selftext else ""
                     user_info = await get_reddit_user_info(post.author)
                     if user_info == None:
                         continue
                     
-                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**{selftext}\n<{post.url}>\n\n{user_info}")
+                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**\n{selftext}\n<{post.url}>\n\n{user_info}")
                     
     except Exception as e:
         print(f"Error: {e}")
