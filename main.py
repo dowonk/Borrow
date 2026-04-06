@@ -37,7 +37,7 @@ async def get_reddit_user_info(redditor):
         output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n"]
 
         if not activity:
-            output.append("*No posts/comments found.*\n")
+            output.append("*No posts/comments found.*")
         else:
             for item in activity[:5]:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
