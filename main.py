@@ -71,7 +71,7 @@ async def check_rborrow():
             if post.created_utc < twelve_hours_ago:
                 continue
                 
-            title = post.title.lower().replace(",","")
+            title = re.sub(r'(?<=\d),', '', post.title.lower())
             if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
                 amount_match = re.compile(r"\d+").search(title)
                 amount = int(amount_match.group())
