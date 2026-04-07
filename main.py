@@ -10,7 +10,7 @@ from discord.ext import commands, tasks
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
-TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
+FORBIDDEN_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
 
 RE_COMMA = re.compile(r'(?<=\d),')
 RE_LOCATION = re.compile(r"us\)|usa|u\.s\.\)|united", re.IGNORECASE)
@@ -33,7 +33,7 @@ async def get_reddit_user_info(redditor):
         activity = []
         async for item in redditor.new(limit=1000):
             sub_name = item.subreddit.display_name.lower()
-            if sub_name in TRACKED_SUBS:
+            if sub_name in FORBIDDEN_SUBS:
                 return sub_name
             activity.append(item)
 
@@ -90,7 +90,7 @@ async def check_rborrow():
                 continue
 
             user_info = await get_reddit_user_info(post.author)
-            if not user_info or user_info in TRACKED_SUBS:
+            if not user_info or user_info in FORBIDDEN_SUBS:
                 continue
             
             selftext = f"*{post.selftext}*" if post.selftext else ""
@@ -113,7 +113,7 @@ async def check(ctx, username: str):
         result = await get_reddit_user_info(redditor)
         await ctx.send(f"Checking {username}...")
         
-        if result in TRACKED_SUBS:
+        if result in FORBIDDEN_SUBS:
             await ctx.send(f"*/u/{username}* has activity in **r/{result}**.")
         else:
             await ctx.send(f"No activity found for */u/{username}*.")
