@@ -58,7 +58,7 @@ async def get_reddit_user_info(redditor):
         ]
         return "\n".join(output + links)
     except Exception as e:
-        print(f"User Info Error: {e}")
+        print(f"Error: {e}")
         return None
 
 @tasks.loop(seconds=10)
@@ -104,7 +104,7 @@ async def check_rborrow():
             await channel.send(message)
                     
     except Exception as e:
-        print(f"Loop Error: {e}")
+        print(f"Error: {e}")
 
 @bot.command()
 async def check(ctx, username: str):
@@ -118,7 +118,7 @@ async def check(ctx, username: str):
         else:
             await ctx.send(f"No activity found for */u/{username}*.")
     except Exception as e:
-        await ctx.send(f"Error checking user: {e}")
+        print(f"Error: {e}")
 
 @bot.event
 async def on_ready():
