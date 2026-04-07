@@ -111,7 +111,7 @@ async def check(ctx, username: str):
     try:
         redditor = await reddit.redditor(username)
         result = await get_reddit_user_info(redditor)
-        await ctx.send(f"Checking {username}...")
+        await ctx.send(f"Checking *{username}*...")
         
         if result in FORBIDDEN_SUBS:
             await ctx.send(f"*/u/{username}* has activity in **r/{result}**.")
