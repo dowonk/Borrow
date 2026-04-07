@@ -109,9 +109,9 @@ async def check_rborrow():
 @bot.command()
 async def check(ctx, username: str):
     try:
+        await ctx.send(f"Checking **/u/{username}**...")
         redditor = await reddit.redditor(username)
         result = await get_reddit_user_info(redditor)
-        await ctx.send(f"Checking **/u/{username}**...")
         
         if result in FORBIDDEN_SUBS:
             await ctx.send(f"**/u/{username}** has activity in **r/{result}**.")
