@@ -1,17 +1,20 @@
 import os
 import re
 import time
-from datetime import datetime, timedelta
 import asyncio
 import asyncpraw
 import webserver
 import discord
 from discord.ext import commands, tasks
 
-
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
+TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
+
+RE_COMMA = re.compile(r'(?<=\d),')
+RE_LOCATION = re.compile(r"us\)|usa|u\.s\.\)|united", re.IGNORECASE)
+RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -25,16 +28,19 @@ def format_time_ago(timestamp):
 async def get_reddit_user_info(redditor):
     try:
         await redditor.load()
-        TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
-
+        
         activity = []
         async for item in redditor.new(limit=1000):
+            sub_name = item.subreddit.display_name.lower()
+            if sub_name in TRACKED_SUBS:
+                return sub_name
             activity.append(item)
-            if item.subreddit.display_name.lower() in TRACKED_SUBS:
-                return None
 
-        output = [f"**Karma:** *{karma}*\n**Age:** *{format_time_ago(redditor.created_utc)}*\n"]
+        output = [
+            f"**Karma:** *{karma}*",
+            f"**Age:** *{format_time_ago(redditor.created_utc)}*\n"
+        ]
 
         if not activity:
             output.append("*No posts/comments found.*")
@@ -51,40 +57,68 @@ async def get_reddit_user_info(redditor):
             f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
         ]
         return "\n".join(output + links)
-        
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"User Info Error: {e}")
+        return None
 
 @tasks.loop(seconds=10)
 async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
-    if not channel: return
+    if not channel:
+        return
 
     try:
         subreddit = await reddit.subreddit("Borrow")
-        history = [m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user]
-
-        now = time.time()
-        twelve_hours_ago = now - (12 * 60 * 60)
+        history = "".join([m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user])
+        
+        cutoff = time.time() - (12 * 60 * 60)
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < twelve_hours_ago:
+            if post.created_utc < cutoff:
                 continue
-                
-            title = re.sub(r'(?<=\d),', '', post.title.lower())
-            if "req" in title and "arranged" not in title and re.compile(r"(us\)|usa|u\.s\.\)|united)").search(title) and post.id not in "".join(history):
-                amount_match = re.compile(r"\d+").search(title)
-                amount = int(amount_match.group())
-                if amount_match and amount <= 300:
-                    selftext = f"*{post.selftext}*" if post.selftext else ""
-                    user_info = await get_reddit_user_info(post.author)
-                    if user_info == None:
-                        continue
-                    
-                    await channel.send(f"<@{USER_ID}> {post.id}\n**{post.title}**\n{selftext}\n<{post.url}>\n\n{user_info}")
+
+            title = RE_COMMA.sub('', post.title.lower())
+            
+            if "req" not in title or "arranged" in title:
+                continue
+            
+            if not RE_LOCATION.search(title) or post.id in history:
+                continue
+
+            amount_match = RE_AMOUNT.search(title)
+            if not amount_match or int(amount_match.group()) > 300:
+                continue
+
+            user_info = await get_reddit_user_info(post.author)
+            if not user_info or user_info in TRACKED_SUBS:
+                continue
+            
+            selftext = f"*{post.selftext}*" if post.selftext else ""
+            message = (
+                f"<@{USER_ID}> {post.id}\n"
+                f"**{post.title}**\n"
+                f"{selftext}\n"
+                f"<{post.url}>\n\n"
+                f"{user_info}"
+            )
+            await channel.send(message)
                     
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Loop Error: {e}")
+
+@bot.command()
+async def check(ctx, username: str):
+    try:
+        redditor = await reddit.redditor(username)
+        result = await get_reddit_user_info(redditor)
+        await ctx.send(f"Checking {username}...")
+        
+        if result in TRACKED_SUBS:
+            await ctx.send(f"*/u/{username}* has activity in **r/{result}**.")
+        else:
+            await ctx.send(f"No activity found for */u/{username}*.")
+    except Exception as e:
+        await ctx.send(f"Error checking user: {e}")
 
 @bot.event
 async def on_ready():
@@ -95,11 +129,8 @@ async def on_ready():
         user_agent="Discord-Borrow-Bot-v1"
     )
     
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel: return
-        
-    check_rborrow.start()
-    await channel.send("Booted up!")
+    if not check_rborrow.is_running():
+        check_rborrow.start()
 
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
