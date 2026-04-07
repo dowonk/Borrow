@@ -25,7 +25,7 @@ def format_time_ago(timestamp):
 async def get_reddit_user_info(redditor):
     try:
         await redditor.load()
-        TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "simpleloans"}
+        TRACKED_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
 
         activity = []
