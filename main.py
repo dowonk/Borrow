@@ -128,6 +128,12 @@ async def on_ready():
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
+
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+
+    await channel.send("Booted up!")
     
     if not check_rborrow.is_running():
         check_rborrow.start()
