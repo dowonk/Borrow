@@ -138,11 +138,13 @@ async def check(ctx, username: str):
             f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
 
-        if len(response) > 2000:
-            await ctx.send("Output is too long for one message. Sending a truncated version.")
-            await ctx.send(response[:1990] + "...")
-        else:
+        if len(response) <= 2000:
             await ctx.send(response)
+        else:
+            while len(response) > 0:
+                chunk = response[:2000]
+                await ctx.send(chunk)
+                response = response[2000:]
 
     except Exception as e:
         print(f"Error: {e}")
