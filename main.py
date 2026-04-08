@@ -110,13 +110,40 @@ async def check_rborrow():
 async def check(ctx, username: str):
     try:
         await ctx.send(f"Checking **/u/{username}**...")
-        redditor = await reddit.redditor(username)
-        result = await get_reddit_user_info(redditor)
         
-        if result in FORBIDDEN_SUBS:
-            await ctx.send(f"**/u/{username}** has activity in **r/{result}**.")
+        redditor = await reddit.redditor(username)
+        unique_subs = set()
+
+        async for item in redditor.new(limit=1000):
+            unique_subs.add(item.subreddit.display_name)
+
+        if not unique_subs:
+            return await ctx.send(f"No activity found for **/u/{username}**.")
+
+        safe_subs = []
+        found_forbidden = []
+
+        for sub in sorted(list(unique_subs), key=lambda s: s.lower()):
+            if sub.lower() in FORBIDDEN_SUBS:
+                found_forbidden.append(f"r/{sub}")
+            else:
+                safe_subs.append(f"r/{sub}")
+
+        safe_text = ", ".join(safe_subs) if safe_subs else "None"
+        forbidden_text = ", ".join(found_forbidden) if found_forbidden else "None"
+
+        response = (
+            f"**Activity Report for /u/{username}**\n\n"
+            f"**All Subreddits:**\n{safe_text}\n\n"
+            f"**Forbidden Subs Found:**\n{forbidden_text}"
+        )
+
+        if len(response) > 2000:
+            await ctx.send("Output is too long for one message. Sending a truncated version.")
+            await ctx.send(response[:1990] + "...")
         else:
-            await ctx.send(f"No activity found for **/u/{username}**.")
+            await ctx.send(response)
+
     except Exception as e:
         print(f"Error: {e}")
 
