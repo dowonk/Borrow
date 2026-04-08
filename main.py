@@ -125,9 +125,9 @@ async def check(ctx, username: str):
 
         for sub in sorted(list(unique_subs), key=lambda s: s.lower()):
             if sub.lower() in FORBIDDEN_SUBS:
-                found_forbidden.append(f"r/{sub}")
+                found_forbidden.append(f"{sub}")
             else:
-                safe_subs.append(f"r/{sub}")
+                safe_subs.append(f"{sub}")
 
         safe_text = ", ".join(safe_subs) if safe_subs else "None"
         forbidden_text = ", ".join(found_forbidden) if found_forbidden else "None"
@@ -135,7 +135,7 @@ async def check(ctx, username: str):
         response = (
             f"Activity Report for **/u/{username}**\n\n"
             f"**Subreddits:**\n{safe_text}\n\n"
-            f"**Forbidden Subs:**\n{forbidden_text}"
+            f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
 
         if len(response) > 2000:
