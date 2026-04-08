@@ -133,9 +133,9 @@ async def check(ctx, username: str):
         forbidden_text = ", ".join(found_forbidden) if found_forbidden else "None"
 
         response = (
-            f"**Activity Report for /u/{username}**\n\n"
-            f"**All Subreddits:**\n{safe_text}\n\n"
-            f"**Forbidden Subs Found:**\n{forbidden_text}"
+            f"Activity Report for **/u/{username}**\n\n"
+            f"**Subreddits:**\n{safe_text}\n\n"
+            f"**Forbidden Subs:**\n{forbidden_text}"
         )
 
         if len(response) > 2000:
