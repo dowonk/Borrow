@@ -53,6 +53,7 @@ async def get_reddit_user_info(redditor):
         links = [
             f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
             f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
+            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>",
             f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
             f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
         ]
