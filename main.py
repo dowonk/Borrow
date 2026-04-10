@@ -95,6 +95,11 @@ async def check_rborrow():
                 continue
             
             selftext = f"*{post.selftext}*" if post.selftext else ""
+            prearranged_text = ["pre arranged", "prearranged", "pre-arranged"]
+
+            if any(text in selftext.lower() for text in prearranged_text):
+                continue
+                
             message = (
                 f"<@{USER_ID}> {post.id}\n"
                 f"**{post.title}**\n"
