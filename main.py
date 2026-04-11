@@ -295,14 +295,19 @@ async def check(ctx, username: str):
 
 @bot.event
 async def on_ready():
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+        
     global reddit
     reddit = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
-    print(f"Logged in as {bot.user}")
     if not check_rborrow.is_running():
         check_rborrow.start()
+
+    await ctx.send("Booted up!")
 
 bot.run(os.environ['TOKEN'])
