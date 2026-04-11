@@ -5,6 +5,7 @@ import asyncio
 import asyncpraw
 import requests
 import subprocess
+import webserver
 import discord
 from discord.ext import commands, tasks
 from playwright.async_api import async_playwright
@@ -22,13 +23,6 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def get_borrower_loan_ids(username):
-    return requests.get(
-        f"https://redditloans.com/api/loans",
-        params={"borrower_name": username, "limit": 100, "order": "id_desc"},
-        headers={"User-Agent": "Discord-Borrow-Bot-v1"}
-    ).json()
-
 def get_loan_details(loan_id):
     resp = requests.get(f"{BASE_URL}/loans/{loan_id}", headers=HEADERS)
     if resp.status_code == 200:
@@ -45,16 +39,18 @@ def get_all_loan_details(loan_ids, max_workers=20):
                 results[loan_id] = data
     return results
 
-def format_amount(minor, exponent=2):
-    return f"${minor / (10 ** exponent):.2f}"
-
 def format_ts(ts):
     if ts is None:
         return "N/A"
     return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
 
 def check_loans(username):
-    loan_ids = get_borrower_loan_ids(username)
+    loan_ids = requests.get(
+        f"https://redditloans.com/api/loans",
+        params={"borrower_name": username, "limit": 100, "order": "id_desc"},
+        headers={"User-Agent": "Discord-Borrow-Bot-v1"}
+    ).json()
+    
     if not loan_ids:
         report = "No loans found.\n"
 
@@ -65,7 +61,7 @@ def check_loans(username):
     ]
 
     total_borrowed = sum(l["principal_minor"] for l in valid)
-    report = f"**Total:** *{format_amount(total_borrowed)}*"
+    report = f"**Total:** *{total_borrowed / (10 ** 2):.2f)}*"
 
     in_progress = [
         (lid, loans[lid]) for lid in sorted(loan_ids, reverse=True)
