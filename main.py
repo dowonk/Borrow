@@ -3,11 +3,13 @@ import re
 import time
 import asyncio
 import asyncpraw
-import webserver
+import requests
 import subprocess
 import discord
 from discord.ext import commands, tasks
-from playwright.async_api import async_playwright  # Changed to async_api
+from playwright.async_api import async_playwright
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
@@ -20,6 +22,69 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
+def get_borrower_loan_ids(username):
+    return requests.get(
+        f"https://redditloans.com/api/loans",
+        params={"borrower_name": username, "limit": 100, "order": "id_desc"},
+        headers="User-Agent": "Discord-Borrow-Bot-v1"
+    ).json()
+
+def get_loan_details(loan_id):
+    resp = requests.get(f"{BASE_URL}/loans/{loan_id}", headers=HEADERS)
+    if resp.status_code == 200:
+        return loan_id, resp.json()
+    return loan_id, None
+
+def get_all_loan_details(loan_ids, max_workers=20):
+    results = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(get_loan_details, lid): lid for lid in loan_ids}
+        for future in as_completed(futures):
+            loan_id, data = future.result()
+            if data:
+                results[loan_id] = data
+    return results
+
+def format_amount(minor, exponent=2):
+    return f"${minor / (10 ** exponent):.2f}"
+
+def format_ts(ts):
+    if ts is None:
+        return "N/A"
+    return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+
+def check_loans(username):
+    loan_ids = get_borrower_loan_ids(username)
+    if not loan_ids:
+        report = "No loans found.\n"
+
+    loans = get_all_loan_details(loan_ids)
+    valid = [
+        loans[lid] for lid in loan_ids
+        if lid in loans and loans[lid]["borrower"].lower() == username.lower()
+    ]
+
+    total_borrowed = sum(l["principal_minor"] for l in valid)
+    report = f"**Total:** *{format_amount(total_borrowed)}*"
+
+    in_progress = [
+        (lid, loans[lid]) for lid in sorted(loan_ids, reverse=True)
+        if lid in loans
+        and loans[lid]["borrower"].lower() == username.lower()
+        and not loans[lid]["repaid_at"]
+        and not loans[lid]["unpaid_at"]
+        and not loans[lid]["deleted_at"]
+    ]
+
+    if not in_progress:
+        report += " | *No in-progress loans.*\n"
+    else:
+        report += f" | **In-progress ({len(in_progress)}):**"
+        for loan_id, loan in in_progress:
+            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: {format_amount(loan['principal_minor'])} | "f"Repaid: {format_amount(loan['principal_repayment_minor'])} | "f"Lender: u/{loan['lender']}*\n"
+
+    return report
+
 def get_chromium_path():
     try:
         result = subprocess.run(["which", "chromium"], capture_output=True, text=True)
@@ -30,40 +95,33 @@ def get_chromium_path():
         pass
     return None
 
-async def get_usl_user(username):  # Changed to async def
+async def get_usl_user(username):
     url = f"https://www.universalscammerlist.com/?username={username}"
     chromium_path = get_chromium_path()
 
-    async with async_playwright() as p:  # Changed to async with
+    async with async_playwright() as p:
         launch_kwargs = {"headless": True}
         if chromium_path:
             launch_kwargs["executable_path"] = chromium_path
 
         browser = await p.chromium.launch(**launch_kwargs)
-        context = await browser.new_context(
-            user_agent=(
-                "Discord-Borrow-Bot-v1"
-            )
-        )
+        context = await browser.new_context(user_agent="Discord-Borrow-Bot-v1")
         page = await context.new_page()
-        await page.goto(url, wait_until="load", timeout=15000)
+        await page.goto(url, wait_until="load", timeout=5000)
 
         try:
             await page.wait_for_function(
                 "document.getElementById('userStatus').innerText.trim() !== ''",
-                timeout=12000
+                timeout=5000
             )
-        except Exception:
+        except:
             pass
 
-        status = (await page.inner_text("#userStatus")).strip()
+        status_raw = await page.inner_text("#userStatus")
+        status = status_raw.strip() if status_raw else ""
+
         history_items = await page.query_selector_all("#userHistory li")
         confirmations = await page.query_selector_all("#userConfirmations li")
-
-        try:
-            loading_msg = (await page.inner_text("#loadingMessage")).strip()
-        except Exception:
-            loading_msg = ""
 
         results = []
         if status:
@@ -77,12 +135,7 @@ async def get_usl_user(username):  # Changed to async def
         await browser.close()
 
         if not results:
-            if loading_msg:
-                results.append(f"Loading error: {loading_msg}")
-            else:
-                results.append(
-                    "No data returned — Reddit's API may be blocking requests from this server's IP."
-                )
+            return "UNKNOWN"
 
         if "is not on" in results[0]:
             report = "NO"
@@ -102,6 +155,7 @@ def format_time_ago(timestamp):
 async def get_reddit_user_info(redditor):
     try:
         await redditor.load()
+        username = redditor.name 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
 
         activity = []
@@ -111,16 +165,13 @@ async def get_reddit_user_info(redditor):
                 return sub_name
             activity.append(item)
 
-        usl_report = await get_usl_user(redditor)
+        usl_report = await get_usl_user(username)
 
-        output = [
-            f"**Karma:** *{karma}*",
-            f"**Age:** *{format_time_ago(redditor.created_utc)}*",
-            f"**USL:** {usl_report}\n"
-        ]
+        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **USL:** *{usl_report}*"]
+        output.append(check_loans(username))
 
         if not activity:
-            output.append("*No posts/comments found.*")
+            output.append("\n*No posts/comments found.*")
         else:
             for item in activity[:5]:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
@@ -128,15 +179,15 @@ async def get_reddit_user_info(redditor):
                 output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
 
         links = [
-            f"\n**Profile:** <https://www.reddit.com/user/{redditor.name}>",
+            f"\n**Profile:** <https://www.reddit.com/user/{username}>",
             f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
-            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>",
-            f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
-            f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
+            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{username}&include_over_18=on&sort=new&t=all>",
+            f"**Loans:** <https://redditloans.com/loans.html?username={username}>",
+            f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
         ]
         return "\n".join(output + links)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in get_reddit_user_info: {e}")
         return None
 
 @tasks.loop(seconds=1)
@@ -147,20 +198,23 @@ async def check_rborrow():
 
     try:
         subreddit = await reddit.subreddit("Borrow")
-        history = "".join([m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user])
+        history = ""
+        async for m in channel.history(limit=10):
+            if m.author == bot.user:
+                history += m.content.lower()
 
         cutoff = time.time() - (12 * 60 * 60)
 
-        async for post in subreddit.new(limit=3):
+        async for post in subreddit.new(limit=5):
             if post.created_utc < cutoff:
                 continue
 
             title = RE_COMMA.sub('', post.title.lower())
 
-            if "req" not in title or "arranged" in title:
+            if "req" not in title or "arranged" in title or post.id.lower() in history:
                 continue
 
-            if not RE_LOCATION.search(title) or post.id in history:
+            if not RE_LOCATION.search(title):
                 continue
 
             amount_match = RE_AMOUNT.search(title)
@@ -168,6 +222,7 @@ async def check_rborrow():
                 continue
 
             user_info = await get_reddit_user_info(post.author)
+
             if not user_info or user_info in FORBIDDEN_SUBS:
                 continue
 
@@ -180,14 +235,14 @@ async def check_rborrow():
             message = (
                 f"<@{USER_ID}> {post.id}\n"
                 f"**{post.title}**\n"
-                f"{selftext}\n"
+                f"{selftext[:500]}\n"
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
             await channel.send(message)
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in check_rborrow: {e}")
 
 @bot.command()
 async def check(ctx, username: str):
@@ -195,12 +250,18 @@ async def check(ctx, username: str):
         await ctx.send(f"Checking **/u/{username}**...")
 
         redditor = await reddit.redditor(username)
-        unique_subs = set()
+        await redditor.load()
 
+        karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
+        age = format_time_ago(redditor.created_utc)
+        usl_report = await get_usl_user(username)
+        loan_report = check_loans(username)
+
+        unique_subs = set()
         async for item in redditor.new(limit=1000):
             unique_subs.add(item.subreddit.display_name)
 
-        if not unique_subs:
+        if not unique_subs and karma == 0:
             return await ctx.send(f"No activity found for **/u/{username}**.")
 
         safe_subs = []
@@ -216,7 +277,9 @@ async def check(ctx, username: str):
         forbidden_text = ", ".join(found_forbidden) if found_forbidden else "None"
 
         response = (
-            f"Activity Report for **/u/{username}**\n\n"
+            f"Report for **/u/{username}**\n"
+            f"**Karma:** *{karma}* | **Age:** *{age}* | **USL Status:** *{usl_report}*\n"
+            f"{loan_report}\n"
             f"**Subreddits:**\n{safe_text}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
@@ -224,10 +287,8 @@ async def check(ctx, username: str):
         if len(response) <= 2000:
             await ctx.send(response)
         else:
-            while len(response) > 0:
-                chunk = response[:2000]
-                await ctx.send(chunk)
-                response = response[2000:]
+            for i in range(0, len(response), 2000):
+                await ctx.send(response[i:i+2000])
 
     except Exception as e:
         print(f"Error: {e}")
@@ -240,15 +301,8 @@ async def on_ready():
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
-
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
-
-    await channel.send("Booted up!")
-
+    print(f"Logged in as {bot.user}")
     if not check_rborrow.is_running():
         check_rborrow.start()
 
-webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
