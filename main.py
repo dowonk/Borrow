@@ -308,6 +308,6 @@ async def on_ready():
     if not check_rborrow.is_running():
         check_rborrow.start()
 
-    await ctx.send("Booted up!")
+    await channel.send("Booted up!")
 
 bot.run(os.environ['TOKEN'])
