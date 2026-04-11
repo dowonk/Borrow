@@ -7,7 +7,7 @@ import webserver
 import subprocess
 import discord
 from discord.ext import commands, tasks
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright  # Changed to async_api
 
 CHANNEL_ID = 1488789667313614930
 USER_ID = 314300380051668994
@@ -30,50 +30,51 @@ def get_chromium_path():
         pass
     return None
 
-def get_usl_user(username):
+async def get_usl_user(username):  # Changed to async def
     url = f"https://www.universalscammerlist.com/?username={username}"
     chromium_path = get_chromium_path()
 
-    with sync_playwright() as p:
+    async with async_playwright() as p:  # Changed to async with
         launch_kwargs = {"headless": True}
         if chromium_path:
             launch_kwargs["executable_path"] = chromium_path
 
-        browser = p.chromium.launch(**launch_kwargs)
-        context = browser.new_context(
+        browser = await p.chromium.launch(**launch_kwargs)
+        context = await browser.new_context(
             user_agent=(
                 "Discord-Borrow-Bot-v1"
             )
         )
-        page = context.new_page()
-        page.goto(url, wait_until="load", timeout=15000)
+        page = await context.new_page()
+        await page.goto(url, wait_until="load", timeout=15000)
 
         try:
-            page.wait_for_function(
+            await page.wait_for_function(
                 "document.getElementById('userStatus').innerText.trim() !== ''",
                 timeout=12000
             )
         except Exception:
             pass
 
-        status = page.inner_text("#userStatus").strip()
-        history_items = page.query_selector_all("#userHistory li")
-        confirmations = page.query_selector_all("#userConfirmations li")
+        status = (await page.inner_text("#userStatus")).strip()
+        history_items = await page.query_selector_all("#userHistory li")
+        confirmations = await page.query_selector_all("#userConfirmations li")
 
         try:
-            loading_msg = page.inner_text("#loadingMessage").strip()
+            loading_msg = (await page.inner_text("#loadingMessage")).strip()
         except Exception:
             loading_msg = ""
 
         results = []
         if status:
             results.append(f"Status: {status}")
-        for item in history_items:
-            results.append(item.inner_text().strip())
-        for item in confirmations:
-            results.append(item.inner_text().strip())
 
-        browser.close()
+        for item in history_items:
+            results.append((await item.inner_text()).strip())
+        for item in confirmations:
+            results.append((await item.inner_text()).strip())
+
+        await browser.close()
 
         if not results:
             if loading_msg:
@@ -83,7 +84,13 @@ def get_usl_user(username):
                     "No data returned — Reddit's API may be blocking requests from this server's IP."
                 )
 
-        return results
+        if "is not on" in results[0]:
+            report = "NO"
+            if len(results) > 1 and results[1]:
+                report += f", {results[1]}"
+        else:
+            report = "YES"
+        return report
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
@@ -96,7 +103,7 @@ async def get_reddit_user_info(redditor):
     try:
         await redditor.load()
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
-        
+
         activity = []
         async for item in redditor.new(limit=1000):
             sub_name = item.subreddit.display_name.lower()
@@ -104,16 +111,12 @@ async def get_reddit_user_info(redditor):
                 return sub_name
             activity.append(item)
 
-        usl_table = []
-        usl_data = get_usl_user(redditor)
-        for entry in usl_data:
-            usl_table.append(entry)
-        usl_report = "\n".join(usl_table)
+        usl_report = await get_usl_user(redditor)
 
         output = [
             f"**Karma:** *{karma}*",
-            f"**Age:** *{format_time_ago(redditor.created_utc)}*\n",
-            f"{usl_report}\n"
+            f"**Age:** *{format_time_ago(redditor.created_utc)}*",
+            f"**USL:** {usl_report}\n"
         ]
 
         if not activity:
@@ -145,7 +148,7 @@ async def check_rborrow():
     try:
         subreddit = await reddit.subreddit("Borrow")
         history = "".join([m.content.lower() async for m in channel.history(limit=5) if m.author == bot.user])
-        
+
         cutoff = time.time() - (12 * 60 * 60)
 
         async for post in subreddit.new(limit=3):
@@ -153,10 +156,10 @@ async def check_rborrow():
                 continue
 
             title = RE_COMMA.sub('', post.title.lower())
-            
+
             if "req" not in title or "arranged" in title:
                 continue
-            
+
             if not RE_LOCATION.search(title) or post.id in history:
                 continue
 
@@ -167,13 +170,13 @@ async def check_rborrow():
             user_info = await get_reddit_user_info(post.author)
             if not user_info or user_info in FORBIDDEN_SUBS:
                 continue
-            
+
             selftext = f"*{post.selftext}*" if post.selftext else ""
             prearranged_text = ["pre arranged", "prearranged", "pre-arranged"]
 
             if any(text in selftext.lower() for text in prearranged_text):
                 continue
-                
+
             message = (
                 f"<@{USER_ID}> {post.id}\n"
                 f"**{post.title}**\n"
@@ -182,7 +185,7 @@ async def check_rborrow():
                 f"{user_info}"
             )
             await channel.send(message)
-                    
+
     except Exception as e:
         print(f"Error: {e}")
 
@@ -190,7 +193,7 @@ async def check_rborrow():
 async def check(ctx, username: str):
     try:
         await ctx.send(f"Checking **/u/{username}**...")
-        
+
         redditor = await reddit.redditor(username)
         unique_subs = set()
 
@@ -243,7 +246,7 @@ async def on_ready():
         return
 
     await channel.send("Booted up!")
-    
+
     if not check_rborrow.is_running():
         check_rborrow.start()
 
