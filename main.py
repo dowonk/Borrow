@@ -187,7 +187,7 @@ async def get_reddit_user_info(redditor):
         ]
         return "\n".join(output + links)
     except Exception as e:
-        print(f"Error in get_reddit_user_info: {e}")
+        print(f"Error: {e}")
         return None
 
 @tasks.loop(seconds=1)
