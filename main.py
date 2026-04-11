@@ -310,4 +310,5 @@ async def on_ready():
 
     await channel.send("Booted up!")
 
+webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
