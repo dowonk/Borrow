@@ -26,7 +26,7 @@ def get_borrower_loan_ids(username):
     return requests.get(
         f"https://redditloans.com/api/loans",
         params={"borrower_name": username, "limit": 100, "order": "id_desc"},
-        headers="User-Agent": "Discord-Borrow-Bot-v1"
+        headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
 
 def get_loan_details(loan_id):
