@@ -100,6 +100,7 @@ async def get_reddit_user_info(redditor):
         await redditor.load()
         username = redditor.name 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
+        age = format_time_ago(redditor.created_utc)
 
         activity = []
         async for item in redditor.new(limit=1000):
@@ -108,7 +109,7 @@ async def get_reddit_user_info(redditor):
                 return sub_name
             activity.append(item)
         
-        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}*"]
+        output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
         output.append(check_loans(username) + "\n")
 
         if not activity:
@@ -127,6 +128,7 @@ async def get_reddit_user_info(redditor):
             f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
         ]
         return "\n".join(output + links)
+        
     except Exception as e:
         print(f"Error: {e}")
         return None
@@ -134,11 +136,11 @@ async def get_reddit_user_info(redditor):
 @tasks.loop(seconds=1)
 async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
+    if not channel: return
 
     try:
         subreddit = await reddit.subreddit("Borrow")
+        
         history = ""
         async for m in channel.history(limit=10):
             if m.author == bot.user:
@@ -147,8 +149,7 @@ async def check_rborrow():
         cutoff = time.time() - (12 * 60 * 60)
 
         async for post in subreddit.new(limit=5):
-            if post.created_utc < cutoff:
-                continue
+            if post.created_utc < cutoff:continue
 
             title = RE_COMMA.sub('', post.title.lower())
             if "req" not in title or "arranged" in title: continue
@@ -228,8 +229,7 @@ async def check(ctx, username: str):
 @bot.event
 async def on_ready():
     channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
+    if not channel: return
         
     global reddit
     reddit = asyncpraw.Reddit(
@@ -237,6 +237,7 @@ async def on_ready():
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
+    
     if not check_rborrow.is_running():
         check_rborrow.start()
 
