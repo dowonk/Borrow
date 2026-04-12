@@ -1,7 +1,6 @@
 import os
 import re
 import time
-import asyncio
 import asyncpraw
 import requests
 import subprocess
