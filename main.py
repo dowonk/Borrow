@@ -154,6 +154,10 @@ def format_time_ago(timestamp):
     return "0s"
 
 async def get_reddit_user_info(redditor):
+    channel = bot.get_channel(CHANNEL_ID)
+    if not channel:
+        return
+        
     try:
         await redditor.load()
         username = redditor.name 
