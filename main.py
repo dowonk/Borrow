@@ -76,7 +76,7 @@ def check_loans(username):
     ]
 
     if not in_progress:
-        report += " | *No in-progress loans.*"
+        report += " | *No loans.*"
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan_id, loan in in_progress:
