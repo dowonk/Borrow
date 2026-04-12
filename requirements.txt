@@ -1,5 +1,4 @@
 asyncpraw
 discord.py
 flask
-playwright
 requests
