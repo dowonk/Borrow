@@ -1,7 +1,6 @@
 import os
 import re
 import time
-import asyncio
 import asyncpraw
 import requests
 import subprocess
@@ -23,20 +22,27 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def get_loan_details(loan_id):
-    resp = requests.get(f"{BASE_URL}/loans/{loan_id}", headers=HEADERS)
-    if resp.status_code == 200:
-        return loan_id, resp.json()
-    return loan_id, None
-
-def get_all_loan_details(loan_ids, max_workers=20):
+def get_loan_details(loan_ids, max_workers=20):
     results = {}
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {executor.submit(get_loan_details, lid): lid for lid in loan_ids}
-        for future in as_completed(futures):
-            loan_id, data = future.result()
-            if data:
-                results[loan_id] = data
+    url_template = "https://redditloans.com/api/loans/{}"
+    headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
+
+    with requests.Session() as session:
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_loan = {
+                executor.submit(session.get, url_template.format(lid), headers=headers): lid 
+                for lid in loan_ids
+            }
+
+            for future in as_completed(future_to_loan):
+                loan_id = future_to_loan[future]
+                try:
+                    resp = future.result()
+                    if resp.status_code == 200:
+                        results[loan_id] = resp.json()
+                except:
+                    pass
+
     return results
 
 def format_ts(ts):
@@ -50,18 +56,17 @@ def check_loans(username):
         params={"borrower_name": username, "limit": 100, "order": "id_desc"},
         headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
-    
     if not loan_ids:
         report = "No loans found.\n"
 
-    loans = get_all_loan_details(loan_ids)
+    loans = get_loan_details(loan_ids)
     valid = [
         loans[lid] for lid in loan_ids
         if lid in loans and loans[lid]["borrower"].lower() == username.lower()
     ]
 
     total_borrowed = sum(l["principal_minor"] for l in valid)
-    report = f"**Total:** *{total_borrowed / (10 ** 2):.2f)}*"
+    report = f"**Total:** *${total_borrowed/100:.0f}*"
 
     in_progress = [
         (lid, loans[lid]) for lid in sorted(loan_ids, reverse=True)
@@ -77,7 +82,7 @@ def check_loans(username):
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan_id, loan in in_progress:
-            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: {format_amount(loan['principal_minor'])} | "f"Repaid: {format_amount(loan['principal_repayment_minor'])} | "f"Lender: u/{loan['lender']}*\n"
+            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: ${loan['principal_minor']/100:.0f} | "f"Repaid: ${loan['principal_repayment_minor']/100:.0f} | "f"Lender: u/{loan['lender']}*\n"
 
     return report
 
@@ -103,12 +108,12 @@ async def get_usl_user(username):
         browser = await p.chromium.launch(**launch_kwargs)
         context = await browser.new_context(user_agent="Discord-Borrow-Bot-v1")
         page = await context.new_page()
-        await page.goto(url, wait_until="load", timeout=5000)
+        await page.goto(url, wait_until="load", timeout=15000)
 
         try:
             await page.wait_for_function(
                 "document.getElementById('userStatus').innerText.trim() !== ''",
-                timeout=5000
+                timeout=12000
             )
         except:
             pass
@@ -206,27 +211,18 @@ async def check_rborrow():
                 continue
 
             title = RE_COMMA.sub('', post.title.lower())
-
-            if "req" not in title or "arranged" in title or post.id.lower() in history:
-                continue
-
-            if not RE_LOCATION.search(title):
-                continue
+            if "req" not in title or "arranged" in title or post.id.lower() in history: continue
+            if not RE_LOCATION.search(title): continue
 
             amount_match = RE_AMOUNT.search(title)
-            if not amount_match or int(amount_match.group()) > 300:
-                continue
+            if not amount_match or int(amount_match.group()) > 300: continue
 
             user_info = await get_reddit_user_info(post.author)
-
-            if not user_info or user_info in FORBIDDEN_SUBS:
-                continue
+            if not user_info or user_info in FORBIDDEN_SUBS: continue
 
             selftext = f"*{post.selftext}*" if post.selftext else ""
             prearranged_text = ["pre arranged", "prearranged", "pre-arranged"]
-
-            if any(text in selftext.lower() for text in prearranged_text):
-                continue
+            if any(text in selftext.lower() for text in prearranged_text): continue
 
             message = (
                 f"<@{USER_ID}> {post.id}\n"
@@ -238,7 +234,7 @@ async def check_rborrow():
             await channel.send(message)
 
     except Exception as e:
-        print(f"Error in check_rborrow: {e}")
+        print(f"Error: {e}")
 
 @bot.command()
 async def check(ctx, username: str):
@@ -305,6 +301,6 @@ async def on_ready():
         check_rborrow.start()
 
     await channel.send("Booted up!")
-
+    
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
