@@ -55,7 +55,7 @@ def check_loans(username):
         headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
     if not loan_ids:
-        report = "No loans found.\n"
+        report = "No loans found."
 
     loans = get_loan_details(loan_ids)
     valid = [
@@ -76,11 +76,11 @@ def check_loans(username):
     ]
 
     if not in_progress:
-        report += " | *No in-progress loans.*\n"
+        report += " | *No in-progress loans.*"
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan_id, loan in in_progress:
-            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: ${loan['principal_minor']/100:.0f} | "f"Repaid: ${loan['principal_repayment_minor']/100:.0f} | "f"Lender: u/{loan['lender']}*\n"
+            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: ${loan['principal_minor']/100:.0f} | "f"Repaid: ${loan['principal_repayment_minor']/100:.0f} | "f"Lender: u/{loan['lender']}*"
 
     return report
 
@@ -109,7 +109,7 @@ async def get_reddit_user_info(redditor):
             activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}*"]
-        output.append(check_loans(username))
+        output.append(check_loans(username) + "\n")
 
         if not activity:
             output.append("\n*No posts/comments found.*")
@@ -151,13 +151,14 @@ async def check_rborrow():
                 continue
 
             title = RE_COMMA.sub('', post.title.lower())
-            if "req" not in title or "arranged" in title or post.id.lower() in history: continue
+            if "req" not in title or "arranged" in title: continue
             if not RE_LOCATION.search(title): continue
 
             amount_match = RE_AMOUNT.search(title)
             if not amount_match or int(amount_match.group()) > 300: continue
 
             user_info = await get_reddit_user_info(post.author)
+            if post.id.lower() in history: continue
             if not user_info or user_info in FORBIDDEN_SUBS: continue
 
             selftext = f"*{post.selftext}*" if post.selftext else ""
@@ -210,6 +211,7 @@ async def check(ctx, username: str):
         response = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
+            f"{loan_report}\n\n"
             f"**Subreddits:**\n{safe_text}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
