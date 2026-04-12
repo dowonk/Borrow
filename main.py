@@ -166,7 +166,7 @@ async def get_reddit_user_info(redditor):
                 return sub_name
             activity.append(item)
 
-        usl_report = await get_usl_user(username)
+        '''usl_report = await get_usl_user(username)'''
 
         output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **USL:** *{usl_report}*"]
         output.append(check_loans(username))
