@@ -55,7 +55,7 @@ def check_loans(username):
         headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
     if not loan_ids:
-        report = "No loans found."
+        report = "No loans found"
 
     loans = get_loan_details(loan_ids)
     valid = [
@@ -76,7 +76,7 @@ def check_loans(username):
     ]
 
     if not in_progress:
-        report += " | *No loans.*"
+        report += " | *No loans*"
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan_id, loan in in_progress:
@@ -150,6 +150,7 @@ async def check_rborrow():
 
         async for post in subreddit.new(limit=5):
             if post.created_utc < cutoff:continue
+            if post.id.lower() in history: continue
 
             title = RE_COMMA.sub('', post.title.lower())
             if "req" not in title or "arranged" in title: continue
@@ -159,7 +160,6 @@ async def check_rborrow():
             if not amount_match or int(amount_match.group()) > 300: continue
 
             user_info = await get_reddit_user_info(post.author)
-            if post.id.lower() in history: continue
             if not user_info or user_info in FORBIDDEN_SUBS: continue
 
             selftext = f"*{post.selftext}*" if post.selftext else ""
