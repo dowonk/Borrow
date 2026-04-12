@@ -3,11 +3,9 @@ import re
 import time
 import asyncpraw
 import requests
-import subprocess
 import webserver
 import discord
 from discord.ext import commands, tasks
-from playwright.async_api import async_playwright
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -86,66 +84,6 @@ def check_loans(username):
 
     return report
 
-def get_chromium_path():
-    try:
-        result = subprocess.run(["which", "chromium"], capture_output=True, text=True)
-        path = result.stdout.strip()
-        if path:
-            return path
-    except Exception:
-        pass
-    return None
-
-async def get_usl_user(username):
-    url = f"https://www.universalscammerlist.com/?username={username}"
-    chromium_path = get_chromium_path()
-
-    async with async_playwright() as p:
-        launch_kwargs = {"headless": True}
-        if chromium_path:
-            launch_kwargs["executable_path"] = chromium_path
-
-        browser = await p.chromium.launch(**launch_kwargs)
-        context = await browser.new_context(user_agent="Discord-Borrow-Bot-v1")
-        page = await context.new_page()
-        await page.goto(url, wait_until="load", timeout=15000)
-
-        try:
-            await page.wait_for_function(
-                "document.getElementById('userStatus').innerText.trim() !== ''",
-                timeout=12000
-            )
-        except:
-            pass
-
-        status_raw = await page.inner_text("#userStatus")
-        status = status_raw.strip() if status_raw else ""
-
-        history_items = await page.query_selector_all("#userHistory li")
-        confirmations = await page.query_selector_all("#userConfirmations li")
-
-        results = []
-        if status:
-            results.append(f"Status: {status}")
-
-        for item in history_items:
-            results.append((await item.inner_text()).strip())
-        for item in confirmations:
-            results.append((await item.inner_text()).strip())
-
-        await browser.close()
-
-        if not results:
-            return "UNKNOWN"
-
-        if "is not on" in results[0]:
-            report = "NO"
-            if len(results) > 1 and results[1]:
-                report += f", {results[1]}"
-        else:
-            report = "YES"
-        return report
-
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
     for label, seconds in INTERVALS:
@@ -169,11 +107,8 @@ async def get_reddit_user_info(redditor):
             if sub_name in FORBIDDEN_SUBS:
                 return sub_name
             activity.append(item)
-
-        '''usl_report = await get_usl_user(username)'''
-        '''await channel.send(usl_report)'''
         
-        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **USL:** *test*"]
+        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}*"]
         output.append(check_loans(username))
 
         if not activity:
@@ -251,7 +186,6 @@ async def check(ctx, username: str):
 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
         age = format_time_ago(redditor.created_utc)
-        usl_report = await get_usl_user(username)
         loan_report = check_loans(username)
 
         unique_subs = set()
@@ -275,8 +209,7 @@ async def check(ctx, username: str):
 
         response = (
             f"Report for **/u/{username}**\n"
-            f"**Karma:** *{karma}* | **Age:** *{age}* | **USL Status:** *{usl_report}*\n"
-            f"{loan_report}\n"
+            f"**Karma:** *{karma}* | **Age:** *{age}*\n"
             f"**Subreddits:**\n{safe_text}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
