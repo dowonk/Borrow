@@ -171,11 +171,11 @@ async def get_reddit_user_info(redditor):
             activity.append(item)
 
         await channel.send('test1')
-        usl_report = await get_usl_user(username)
-        await channel.send(usl_report)
+        '''usl_report = await get_usl_user(username)'''
+        '''await channel.send(usl_report)'''
         await channel.send('test2')
         
-        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **USL:** *{usl_report}*"]
+        output = [f"**Karma:** *{karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **USL:** *test*"]
         await channel.send('test1loan')
         output.append(check_loans(username))
         await channel.send('test2loan')
