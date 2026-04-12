@@ -211,7 +211,7 @@ async def check(ctx, username: str):
         response = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-            f"{loan_report}\n\n"
+            f"{loan_report}\n"
             f"**Subreddits:**\n{safe_text}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_text}"
         )
