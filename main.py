@@ -194,7 +194,7 @@ async def check(ctx, username: str):
         async for item in redditor.new(limit=1000):
             unique_subs.add(item.subreddit.display_name)
 
-        if not unique_subs and karma == 0:
+        if not unique_subs:
             return await ctx.send(f"No activity found for **/u/{username}**.")
 
         safe_subs = []
