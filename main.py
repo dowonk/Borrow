@@ -200,24 +200,24 @@ async def check(ctx, username: str):
         if not unique_subs:
             return await ctx.send(f"No activity found for **/u/{username}**.")
 
-        subreddits = []
-        forbidden_subreddits = []
+        subreddit_list = []
+        forbidden_list = []
 
         for sub in sorted(list(unique_subs), key=lambda s: s.lower()):
             if sub.lower() in FORBIDDEN_SUBS:
-                found_forbidden.append(f"{sub}")
+                forbidden_list.append(f"{sub}")
             else:
-                subreddits.append(f"{sub}")
+                subreddit_list.append(f"{sub}")
 
-        subreddit_list = ", ".join(subreddits) if subreddits else "None"
-        forbidden_list = ", ".join(forbidden_subreddits) if forbidden_subreddits else "None"
+        subreddit_report = ", ".join(subreddit_list) if subreddit_list else "None"
+        forbidden_report = ", ".join(forbidden_list) if forbidden_list else "None"
 
         response = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
             f"{loan_report}\n\n"
-            f"**Subreddits:**\n{subreddit_list}\n\n"
-            f"**Forbidden Subreddits:**\n{forbidden_list}"
+            f"**Subreddits:**\n{subreddit_report}\n\n"
+            f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
 
         if len(response) <= 2000:
