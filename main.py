@@ -201,7 +201,7 @@ async def check(ctx, username: str):
             report = (
                 f"Report for **/u/{username}**\n"
                 f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-                f"{loan_report}\n\n",
+                f"{loan_report}\n\n"
                 f"No activity found for **/u/{username}**."
             )
             return await ctx.send(report)
