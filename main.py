@@ -187,7 +187,7 @@ async def check(ctx, username: str):
         try:
             await redditor.load()
         except Exception:
-            return await ctx.send(f"No activity found for **/u/{username}**.")
+            return await ctx.send(f"**/u/{username}** not found.")
 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
         age = format_time_ago(redditor.created_utc)
@@ -201,7 +201,7 @@ async def check(ctx, username: str):
             report = (
                 f"Report for **/u/{username}**\n"
                 f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-                f"{loan_report}",
+                f"{loan_report}\n\n",
                 f"No activity found for **/u/{username}**."
             )
             return await ctx.send(report)
@@ -226,11 +226,11 @@ async def check(ctx, username: str):
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
 
-        if len(response) <= 2000:
-            await ctx.send(response)
+        if len(report) <= 2000:
+            await ctx.send(report)
         else:
-            for i in range(0, len(response), 2000):
-                await ctx.send(response[i:i+2000])
+            for i in range(0, len(report), 2000):
+                await ctx.send(report[i:i+2000])
 
     except Exception as e:
         print(f"Error: {e}")
