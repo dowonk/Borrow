@@ -198,7 +198,13 @@ async def check(ctx, username: str):
             unique_subs.add(item.subreddit.display_name)
 
         if not unique_subs:
-            return await ctx.send(f"No activity found for **/u/{username}**.")
+            report = (
+                f"Report for **/u/{username}**\n"
+                f"**Karma:** *{karma}* | **Age:** *{age}*\n"
+                f"{loan_report}",
+                f"No activity found for **/u/{username}**."
+            )
+            return await ctx.send(report)
 
         subreddit_list = []
         forbidden_list = []
@@ -212,7 +218,7 @@ async def check(ctx, username: str):
         subreddit_report = ", ".join(subreddit_list) if subreddit_list else "None"
         forbidden_report = ", ".join(forbidden_list) if forbidden_list else "None"
 
-        response = (
+        report = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
             f"{loan_report}\n\n"
