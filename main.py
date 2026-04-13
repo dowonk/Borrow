@@ -184,7 +184,10 @@ async def check(ctx, username: str):
         await ctx.send(f"Checking **/u/{username}**...")
 
         redditor = await reddit.redditor(username)
-        await redditor.load()
+        try:
+            await redditor.load()
+        except Exception:
+            return await ctx.send(f"No activity found for **/u/{username}**.")
 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
         age = format_time_ago(redditor.created_utc)
@@ -197,24 +200,24 @@ async def check(ctx, username: str):
         if not unique_subs:
             return await ctx.send(f"No activity found for **/u/{username}**.")
 
-        safe_subs = []
-        found_forbidden = []
+        subreddits = []
+        forbidden_subreddits = []
 
         for sub in sorted(list(unique_subs), key=lambda s: s.lower()):
             if sub.lower() in FORBIDDEN_SUBS:
                 found_forbidden.append(f"{sub}")
             else:
-                safe_subs.append(f"{sub}")
+                subreddits.append(f"{sub}")
 
-        safe_text = ", ".join(safe_subs) if safe_subs else "None"
-        forbidden_text = ", ".join(found_forbidden) if found_forbidden else "None"
+        subreddit_list = ", ".join(subreddits) if subreddits else "None"
+        forbidden_list = ", ".join(forbidden_subreddits) if forbidden_subreddits else "None"
 
         response = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
             f"{loan_report}\n\n"
-            f"**Subreddits:**\n{safe_text}\n\n"
-            f"**Forbidden Subreddits:**\n{forbidden_text}"
+            f"**Subreddits:**\n{subreddit_list}\n\n"
+            f"**Forbidden Subreddits:**\n{forbidden_list}"
         )
 
         if len(response) <= 2000:
