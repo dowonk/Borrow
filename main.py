@@ -160,7 +160,7 @@ async def check_rborrow():
             if not amount_match or int(amount_match.group()) > 300: continue
 
             user_info = await get_reddit_user_info(post.author)
-            if not user_info or user_info in FORBIDDEN_SUBS: continue
+            if user_info in FORBIDDEN_SUBS: continue
 
             selftext = f"*{post.selftext}*" if post.selftext else ""
             prearranged_text = ["pre arranged", "prearranged", "pre-arranged"]
