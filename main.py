@@ -107,7 +107,8 @@ async def get_reddit_user_info(redditor):
             sub_name = item.subreddit.display_name.lower()
             if sub_name in FORBIDDEN_SUBS:
                 return sub_name
-            activity.append(item)
+            elif sub_name != "borrow":
+                activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
         output.append(check_loans(username) + "\n")
