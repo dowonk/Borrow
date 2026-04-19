@@ -54,33 +54,36 @@ def check_loans(username):
         params={"borrower_name": username, "limit": 100, "order": "id_desc"},
         headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
+    
     if not loan_ids:
         report = "No loans found"
 
-    loans = get_loan_details(loan_ids)
+    all_loans = get_loan_details(loan_ids).values()
+
     valid = [
-        loans[lid] for lid in loan_ids
-        if lid in loans and loans[lid]["borrower"].lower() == username.lower()
+        loan for loan in all_loans 
+        if loan["borrower"].lower() == username.lower()
     ]
 
     total_borrowed = sum(l["principal_minor"] for l in valid)
     report = f"**Total:** *${total_borrowed/100:.0f}*"
 
     in_progress = [
-        (lid, loans[lid]) for lid in sorted(loan_ids, reverse=True)
-        if lid in loans
-        and loans[lid]["borrower"].lower() == username.lower()
-        and not loans[lid]["repaid_at"]
-        and not loans[lid]["unpaid_at"]
-        and not loans[lid]["deleted_at"]
+        loan for loan in valid
+        if not loan["repaid_at"]
+        and not loan["unpaid_at"]
+        and not loan["deleted_at"]
     ]
 
     if not in_progress:
         report += " | *No loans*"
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
-        for loan_id, loan in in_progress:
-            report += f" | *Loan #{loan_id} | {format_ts(loan['created_at'])} | "f"Principal: ${loan['principal_minor']/100:.0f} | "f"Repaid: ${loan['principal_repayment_minor']/100:.0f} | "f"Lender: u/{loan['lender']}*"
+        for loan in in_progress:
+            report += (
+                f"Amount: ${loan['principal_minor']/100:.0f} | "
+                f"Lender: u/{loan['lender']}*"
+            )
 
     return report
 
