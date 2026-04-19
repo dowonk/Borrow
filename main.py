@@ -54,9 +54,6 @@ def check_loans(username):
         params={"borrower_name": username, "limit": 100, "order": "id_desc"},
         headers={"User-Agent": "Discord-Borrow-Bot-v1"}
     ).json()
-    
-    if not loan_ids:
-        report = "No loans found"
 
     all_loans = get_loan_details(loan_ids).values()
 
@@ -76,7 +73,7 @@ def check_loans(username):
     ]
 
     if not in_progress:
-        report += " | *No loans*"
+        report += " | *None*"
     else:
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan in in_progress:
