@@ -15,7 +15,7 @@ INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 
 FORBIDDEN_SUBS = {"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"}
 
 RE_COMMA = re.compile(r'(?<=\d),')
-RE_LOCATION = re.compile(r"\bu\.?s\.?\b|usa|united", re.IGNORECASE)
+RE_LOCATION = re.compile(r"\bu\.?s\.?\b|usa|state", re.IGNORECASE)
 RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
