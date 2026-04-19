@@ -81,7 +81,7 @@ def check_loans(username):
         report += f" | **In-progress ({len(in_progress)}):**"
         for loan in in_progress:
             report += (
-                f" *Amount: ${loan['principal_minor']/100:.0f} | "
+                f" | *Amount: ${loan['principal_minor']/100:.0f} | "
                 f"Lender: {loan['lender']}*"
             )
 
