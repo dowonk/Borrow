@@ -114,7 +114,7 @@ async def get_reddit_user_info(redditor):
         output.append(check_loans(username) + "\n")
 
         if not activity:
-            output.append("*No posts/comments found.*")
+            output.append("*Hidden profile*")
         else:
             for item in activity[:5]:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
