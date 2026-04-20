@@ -122,8 +122,8 @@ async def get_reddit_user_info(redditor):
                 output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
 
         links = [
-            f"\n**Profile:** <https://www.reddit.com/user/{username}>",
-            f"**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
+            f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
+            f"**Profile:** <https://www.reddit.com/user/{username}>",
             f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{username}&include_over_18=on&sort=new&t=all>",
             f"**Loans:** <https://redditloans.com/loans.html?username={username}>",
             f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
