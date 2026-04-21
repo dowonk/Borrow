@@ -20,7 +20,7 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def loans_report(username, max_workers=20):
+def get_loans(username, max_workers=20):
     headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
     results = {}
 
@@ -81,7 +81,7 @@ def format_time_ago(timestamp):
             return f"{diff // seconds}{label}"
     return "0s"
 
-async def user_report(redditor):
+async def get_user_info(redditor):
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
         return
@@ -89,7 +89,7 @@ async def user_report(redditor):
     try:
         await redditor.load()
         username = redditor.name 
-        karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
+        karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
 
         activity = []
@@ -101,7 +101,7 @@ async def user_report(redditor):
                 activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        output.append(loans_report(username) + "\n")
+        output.append(get_loans(username) + "\n")
 
         if not activity:
             output.append("*Hidden profile*")
@@ -149,14 +149,14 @@ async def check_posts():
             amount_match = RE_AMOUNT.search(title)
             if not amount_match or int(amount_match.group()) > 300: continue
 
-            user_info = await user_report(post.author)
+            user_info = await get_user_info(post.author)
             if user_info is None or user_info in FORBIDDEN_SUBS: continue
             if any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT): continue
 
             message = (
                 f"<@{USER_ID}> {post.id}\n"
                 f"**{post.title}**\n"
-                f"{selftext[:500]}\n"
+                f"{post.selftext}\n"
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
@@ -176,9 +176,9 @@ async def check(ctx, username: str):
         except Exception:
             return await ctx.send(f"**/u/{username}** not found.")
 
-        karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
+        karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
-        loan_report = loans_report(username)
+        user_loans = get_loans(username)
 
         unique_subs = set()
         async for item in redditor.new(limit=1000):
@@ -188,7 +188,7 @@ async def check(ctx, username: str):
             report = (
                 f"Report for **/u/{username}**\n"
                 f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-                f"{loan_report}\n\n"
+                f"{user_loans}\n\n"
                 f"No activity found for **/u/{username}**."
             )
             return await ctx.send(report)
@@ -208,7 +208,7 @@ async def check(ctx, username: str):
         report = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-            f"{loan_report}\n\n"
+            f"{user_loans}\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
