@@ -93,7 +93,7 @@ async def get_user_info(redditor):
         age = format_time_ago(redditor.created_utc)
 
         activity = []
-        async for item in redditor.new(limit=1000):
+        async for item in redditor.new(limit=100):
             sub_name = item.subreddit.display_name.lower()
             if sub_name in FORBIDDEN_SUBS:
                 return sub_name
@@ -138,7 +138,7 @@ async def check_posts():
                 history += m.content.lower()
 
         async for post in subreddit.new(limit=5):
-            if post.created_utc < time.time() - (12 * 60 * 60): continue
+            if post.created_utc < time.time() - (3 * 60 * 60): continue
             if post.id.lower() in history: continue
 
             title = post.title.lower()
