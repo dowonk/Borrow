@@ -111,7 +111,7 @@ async def get_reddit_user_info(redditor):
                 activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        output.append(loans_report(username) + "\n")
+        output.append(check_loans(username) + "\n")
 
         if not activity:
             output.append("*Hidden profile*")
@@ -135,7 +135,7 @@ async def get_reddit_user_info(redditor):
         return None
 
 @tasks.loop(seconds=1)
-async def check_posts():
+async def check_rborrow():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel: return
 
@@ -143,9 +143,11 @@ async def check_posts():
         subreddit = await reddit.subreddit("Borrow")
         
         history = ""
-        async for m in channel.history(limit=5):
+        async for m in channel.history(limit=10):
             if m.author == bot.user:
                 history += m.content.lower()
+
+        cutoff = time.time() - (12 * 60 * 60)
 
         async for post in subreddit.new(limit=5):
             if post.created_utc < time.time() - (60 * 60): continue
@@ -188,7 +190,7 @@ async def check(ctx, username: str):
 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
         age = format_time_ago(redditor.created_utc)
-        loan_report = loans_report(username)
+        loan_report = check_loans(username)
 
         unique_subs = set()
         async for item in redditor.new(limit=1000):
@@ -244,8 +246,8 @@ async def on_ready():
         user_agent="Discord-Borrow-Bot-v1"
     )
     
-    if not check_posts.is_running():
-        check_posts.start()
+    if not check_rborrow.is_running():
+        check_rborrow.start()
 
     await channel.send("Booted up!")
     
