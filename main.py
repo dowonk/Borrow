@@ -27,7 +27,7 @@ def get_loans(username, max_workers=20):
     with requests.Session() as session:
         loan_ids = session.get(
             "https://redditloans.com/api/loans",
-            params={"borrower_name": username, "limit": 100, "order": "id_desc"},
+            params={"borrower_name": username, "limit": 10, "order": "id_desc"},
             headers=headers
         ).json()
 
