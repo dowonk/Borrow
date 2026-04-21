@@ -234,7 +234,9 @@ async def on_ready():
         user_agent="Discord-Borrow-Bot-v1"
     )
     
-    check_posts.start()
+    if not check_posts.is_running():
+        check_posts.start()
+        
     await channel.send("Booted up!")
     
 webserver.keep_alive()
