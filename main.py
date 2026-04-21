@@ -138,7 +138,7 @@ async def check_posts():
                 history += m.content.lower()
 
         async for post in subreddit.new(limit=5):
-            if post.created_utc < time.time() - (3 * 60 * 60): continue
+            if post.created_utc < time.time() - (60 * 60): continue
             if post.id.lower() in history: continue
 
             title = post.title.lower()
