@@ -20,18 +20,12 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def loans_report(username, max_workers=20):
-    headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
+def get_loan_details(loan_ids, max_workers=20):
     results = {}
+    url_template = "https://redditloans.com/api/loans/{}"
+    headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
 
     with requests.Session() as session:
-        loan_ids = session.get(
-            "https://redditloans.com/api/loans",
-            params={"borrower_name": username, "limit": 100, "order": "id_desc"},
-            headers=headers
-        ).json()
-
-        url_template = "https://redditloans.com/api/loans/{}"
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_loan = {
                 executor.submit(session.get, url_template.format(lid), headers=headers): lid 
@@ -47,8 +41,24 @@ def loans_report(username, max_workers=20):
                 except:
                     pass
 
+    return results
+
+def format_ts(ts):
+    if ts is None:
+        return "N/A"
+    return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
+
+def check_loans(username):
+    loan_ids = requests.get(
+        f"https://redditloans.com/api/loans",
+        params={"borrower_name": username, "limit": 100, "order": "id_desc"},
+        headers={"User-Agent": "Discord-Borrow-Bot-v1"}
+    ).json()
+
+    all_loans = get_loan_details(loan_ids).values()
+
     valid = [
-        loan for loan in results.values() 
+        loan for loan in all_loans 
         if loan["borrower"].lower() == username.lower()
     ]
 
