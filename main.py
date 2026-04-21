@@ -53,7 +53,7 @@ def get_loans(username, max_workers=20):
     ]
 
     total_borrowed = sum(l["principal_minor"] for l in valid)
-    report = f"**Total:** *${total_borrowed/100:.0f}*"
+    loans_report = f"**Total:** *${total_borrowed/100:.0f}*"
 
     in_progress = [
         loan for loan in valid
@@ -63,16 +63,16 @@ def get_loans(username, max_workers=20):
     ]
 
     if not in_progress:
-        report += " | *None*"
+        loans_report += " | *None*"
     else:
-        report += f" | **In-progress ({len(in_progress)}):**"
+        loans_report += f" | **In-progress ({len(in_progress)}):**"
         for loan in in_progress:
-            report += (
+            loans_report += (
                 f" *${loan['principal_minor']/100:.0f} | "
                 f"Lender: {loan['lender']} |*"
             )
 
-    return report
+    return loans_report
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
@@ -100,25 +100,25 @@ async def get_user_info(redditor):
             elif sub_name != "borrow":
                 activity.append(item)
 
-        output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        output.append(get_loans(username))
+        user_report = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
+        user_report.append(get_loans(username))
 
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                output.append("**Moderated Subs:** *None*\n")
+                user_report.append("**Moderated Subs:** *None*\n")
             else:
-                output.append("**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
+                user_report.append("**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
 
         if not activity:
-            output.append("*Hidden profile*")
+            user_report.append("*Hidden profile*")
         else:
             for item in activity[:5]:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
                 text = text.replace('\n', ' ')[:100]
-                output.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
+                user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
 
         links = [
             f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
@@ -127,7 +127,7 @@ async def get_user_info(redditor):
             f"**Loans:** <https://redditloans.com/loans.html?username={username}>",
             f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
         ]
-        return "\n".join(output + links)
+        return "\n".join(user_report + links)
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
@@ -201,16 +201,6 @@ async def check(ctx, username: str):
         unique_subs = set()
         async for item in redditor.new(limit=1000):
             unique_subs.add(item.subreddit.display_name)
-
-        if not unique_subs:
-            report = (
-                f"Report for **/u/{username}**\n"
-                f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-                f"{user_loans}\n"
-                f"{moderated_list}\n\n"
-                f"No activity found for **/u/{username}**."
-            )
-            return await ctx.send(report)
 
         subreddit_list = []
         forbidden_list = []
