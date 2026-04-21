@@ -43,11 +43,6 @@ def get_loan_details(loan_ids, max_workers=20):
 
     return results
 
-def format_ts(ts):
-    if ts is None:
-        return "N/A"
-    return datetime.utcfromtimestamp(ts).strftime("%Y-%m-%d")
-
 def check_loans(username):
     loan_ids = requests.get(
         f"https://redditloans.com/api/loans",
@@ -146,8 +141,6 @@ async def check_rborrow():
         async for m in channel.history(limit=10):
             if m.author == bot.user:
                 history += m.content.lower()
-
-        cutoff = time.time() - (12 * 60 * 60)
 
         async for post in subreddit.new(limit=5):
             if post.created_utc < time.time() - (60 * 60): continue
