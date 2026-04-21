@@ -189,10 +189,11 @@ async def check(ctx, username: str):
         age = format_time_ago(redditor.created_utc)
         user_loans = get_loans(username)
 
-        moderated_list = "**Moderated Subs:** *None*"
         try:
             moderated_subs = await redditor.moderated()
-            if moderated_subs:
+            if not moderated_subs:
+                moderated_list = "**Moderated Subs:** *None*"
+            else:
                 moderated_list = "**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*"
         except Exception as e:
             print(f"Error: {e}")
