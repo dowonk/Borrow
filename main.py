@@ -85,7 +85,7 @@ async def get_user_info(redditor):
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
         return
-        
+
     try:
         await redditor.load()
         username = redditor.name 
@@ -99,21 +99,18 @@ async def get_user_info(redditor):
                 return sub_name
             elif sub_name != "borrow":
                 activity.append(item)
-        
+
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
         output.append(get_loans(username))
 
-        moderated_subs = redditor.moderated()
         try:
-            moderated_subs = redditor.moderated()
-        
+            moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                output.append("Moderated Subs: *None*" + "\n")
+                output.append("**Moderated Subs:** *None*\n")
             else:
-                output.append("Moderated Subs: *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
-        
-        except Exception:
-            print(f"Error: {e}")
+                output.append("**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
+        except Exception as e:
+            print(f"Error getting moderated subs: {e}")
 
         if not activity:
             output.append("*Hidden profile*")
@@ -131,9 +128,9 @@ async def get_user_info(redditor):
             f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
         ]
         return "\n".join(output + links)
-        
+
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in get_user_info: {e}")
         return None
 
 @tasks.loop(seconds=1)
@@ -143,7 +140,7 @@ async def check_posts():
 
     try:
         subreddit = await reddit.subreddit("Borrow")
-        
+
         history = ""
         async for m in channel.history(limit=5):
             if m.author == bot.user:
@@ -175,7 +172,7 @@ async def check_posts():
             await channel.send(message)
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in check_posts: {e}")
 
 @bot.command()
 async def check(ctx, username: str):
@@ -191,17 +188,13 @@ async def check(ctx, username: str):
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
         user_loans = get_loans(username)
-        
-        moderated_subs = redditor.moderated()
+
+        moderated_list = "**Moderated Subs:** *None*"
         try:
-            moderated_subs = redditor.moderated()
-        
-            if not moderated_subs:
-                moderated_list = "Moderated Subs: *None*" + "\n"
-            else:
-                moderated_list = "Moderated Subs: *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"
-        
-        except Exception:
+            moderated_subs = await redditor.moderated()
+            if moderated_subs:
+                moderated_list = "**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*"
+        except Exception as e:
             print(f"Error: {e}")
 
         unique_subs = set()
@@ -246,7 +239,7 @@ async def check(ctx, username: str):
                 await ctx.send(report[i:i+2000])
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error in check command: {e}")
 
 @bot.event
 async def on_ready():
