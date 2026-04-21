@@ -101,7 +101,19 @@ async def get_user_info(redditor):
                 activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        output.append(get_loans(username) + "\n")
+        output.append(get_loans(username))
+
+        moderated_subs = redditor.moderated()
+        try:
+            moderated_subs = redditor.moderated()
+        
+            if not moderated_subs:
+                output.append("Moderated Subs: *None*" + "\n")
+            else:
+                output.append("Moderated Subs: *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
+        
+        except Exception:
+            print(f"Error: {e}")
 
         if not activity:
             output.append("*Hidden profile*")
@@ -179,6 +191,18 @@ async def check(ctx, username: str):
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
         user_loans = get_loans(username)
+        
+        moderated_subs = redditor.moderated()
+        try:
+            moderated_subs = redditor.moderated()
+        
+            if not moderated_subs:
+                moderated_list = "Moderated Subs: *None*" + "\n"
+            else:
+                moderated_list = "Moderated Subs: *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"
+        
+        except Exception:
+            print(f"Error: {e}")
 
         unique_subs = set()
         async for item in redditor.new(limit=1000):
@@ -188,7 +212,8 @@ async def check(ctx, username: str):
             report = (
                 f"Report for **/u/{username}**\n"
                 f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-                f"{user_loans}\n\n"
+                f"{user_loans}\n"
+                f"{moderated_list}\n\n"
                 f"No activity found for **/u/{username}**."
             )
             return await ctx.send(report)
@@ -208,7 +233,8 @@ async def check(ctx, username: str):
         report = (
             f"Report for **/u/{username}**\n"
             f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-            f"{user_loans}\n\n"
+            f"{user_loans}\n"
+            f"{moderated_list}\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
@@ -234,9 +260,7 @@ async def on_ready():
         user_agent="Discord-Borrow-Bot-v1"
     )
     
-    if not check_posts.is_running():
-        check_posts.start()
-        
+    check_posts.start()
     await channel.send("Booted up!")
     
 webserver.keep_alive()
