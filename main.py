@@ -20,12 +20,18 @@ RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def get_loan_details(loan_ids, max_workers=20):
-    results = {}
-    url_template = "https://redditloans.com/api/loans/{}"
+def loans_report(username, max_workers=20):
     headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
+    results = {}
 
     with requests.Session() as session:
+        loan_ids = session.get(
+            "https://redditloans.com/api/loans",
+            params={"borrower_name": username, "limit": 100, "order": "id_desc"},
+            headers=headers
+        ).json()
+
+        url_template = "https://redditloans.com/api/loans/{}"
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_loan = {
                 executor.submit(session.get, url_template.format(lid), headers=headers): lid 
@@ -41,19 +47,8 @@ def get_loan_details(loan_ids, max_workers=20):
                 except:
                     pass
 
-    return results
-
-def check_loans(username):
-    loan_ids = requests.get(
-        f"https://redditloans.com/api/loans",
-        params={"borrower_name": username, "limit": 100, "order": "id_desc"},
-        headers={"User-Agent": "Discord-Borrow-Bot-v1"}
-    ).json()
-
-    all_loans = get_loan_details(loan_ids).values()
-
     valid = [
-        loan for loan in all_loans 
+        loan for loan in results.values() 
         if loan["borrower"].lower() == username.lower()
     ]
 
@@ -106,7 +101,7 @@ async def get_reddit_user_info(redditor):
                 activity.append(item)
         
         output = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        output.append(check_loans(username) + "\n")
+        output.append(loans_report(username) + "\n")
 
         if not activity:
             output.append("*Hidden profile*")
@@ -130,7 +125,7 @@ async def get_reddit_user_info(redditor):
         return None
 
 @tasks.loop(seconds=1)
-async def check_rborrow():
+async def check_posts():
     channel = bot.get_channel(CHANNEL_ID)
     if not channel: return
 
@@ -138,18 +133,18 @@ async def check_rborrow():
         subreddit = await reddit.subreddit("Borrow")
         
         history = ""
-        async for m in channel.history(limit=10):
+        async for m in channel.history(limit=5):
             if m.author == bot.user:
                 history += m.content.lower()
 
         async for post in subreddit.new(limit=5):
-            if post.created_utc < time.time() - (60 * 60): continue
+            if post.created_utc < time.time() - (12 * 60 * 60): continue
             if post.id.lower() in history: continue
 
             title = post.title.lower()
             if "req" not in title: continue
             if any(word in title for word in PREARRANGED_WORDS): continue
-            if any(word in title for word in LOCATIONS): pass
+            if not any(word in title for word in LOCATIONS): continue
 
             amount_match = RE_AMOUNT.search(title)
             if not amount_match or int(amount_match.group()) > 300: continue
@@ -183,7 +178,7 @@ async def check(ctx, username: str):
 
         karma = (redditor.link_karma or 0) + (redditor.comment_karma or 0)
         age = format_time_ago(redditor.created_utc)
-        loan_report = check_loans(username)
+        loan_report = loans_report(username)
 
         unique_subs = set()
         async for item in redditor.new(limit=1000):
@@ -239,8 +234,8 @@ async def on_ready():
         user_agent="Discord-Borrow-Bot-v1"
     )
     
-    if not check_rborrow.is_running():
-        check_rborrow.start()
+    if not check_posts.is_running():
+        check_posts.start()
 
     await channel.send("Booted up!")
     
