@@ -81,7 +81,7 @@ def format_time_ago(timestamp):
             return f"{diff // seconds}{label}"
     return "0s"
 
-async def get_reddit_user_info(redditor):
+async def user_report(redditor):
     channel = bot.get_channel(CHANNEL_ID)
     if not channel:
         return
@@ -149,7 +149,7 @@ async def check_posts():
             amount_match = RE_AMOUNT.search(title)
             if not amount_match or int(amount_match.group()) > 300: continue
 
-            user_info = await get_reddit_user_info(post.author)
+            user_info = await user_report(post.author)
             if user_info is None or user_info in FORBIDDEN_SUBS: continue
             if any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT): continue
 
