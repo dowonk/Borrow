@@ -103,9 +103,9 @@ async def get_user_info(redditor):
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report.append("**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n")
+                user_report = f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n"
             else:
-                user_report.append("**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
+                user_report = f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
             
