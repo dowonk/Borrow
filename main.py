@@ -100,17 +100,16 @@ async def get_user_info(redditor):
             elif sub_name != "borrow":
                 activity.append(item)
 
-        user_report = [f"**Karma:** *{karma}* | **Age:** *{age}*"]
-        user_report.append(get_loans(username))
-
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report.append("**Moderated Subs:** *None*\n")
+                user_report.append("**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n")
             else:
-                user_report.append("**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
+                user_report.append("**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n")
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
+            
+        user_report.append(get_loans(username))
 
         if not activity:
             user_report.append("*Hidden profile*")
@@ -192,9 +191,9 @@ async def check(ctx, username: str):
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                moderated_list = "**Moderated Subs:** *None*"
+                moderated_list = "None"
             else:
-                moderated_list = "**Moderated Subs:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*"
+                moderated_list = ", ".join([f"{s.display_name}" for s in moderated_subs])
         except Exception as e:
             print(f"Error: {e}")
 
@@ -216,9 +215,8 @@ async def check(ctx, username: str):
 
         report = (
             f"Report for **/u/{username}**\n"
-            f"**Karma:** *{karma}* | **Age:** *{age}*\n"
-            f"{user_loans}\n"
-            f"{moderated_list}\n\n"
+            f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n"
+            f"{user_loans}\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
