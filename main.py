@@ -15,7 +15,7 @@ INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
 PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
 PREARRANGED_SELFTEXT = ["pre arranged", "prearranged", "pre-arranged"]
-LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us", "state"]
+LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state"]
 RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
