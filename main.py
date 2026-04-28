@@ -164,7 +164,7 @@ async def check_posts():
             message = (
                 f"<@{USER_ID}> {post.id}\n"
                 f"**{post.title}**\n"
-                f"{post.selftext}\n"
+                f"{post.selftext[:500]}\n"
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
