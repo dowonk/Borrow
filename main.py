@@ -141,11 +141,11 @@ async def check_posts():
         subreddit = await reddit.subreddit("Borrow")
 
         history = ""
-        async for m in channel.history(limit=5):
+        async for m in channel.history(limit=3):
             if m.author == bot.user:
                 history += m.content.lower()
 
-        async for post in subreddit.new(limit=5):
+        async for post in subreddit.new(limit=3):
             if post.created_utc < time.time() - (60 * 60): continue
             if post.id.lower() in history: continue
 
