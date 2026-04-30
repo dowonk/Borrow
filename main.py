@@ -225,9 +225,12 @@ async def check(ctx, username: str):
 
 @bot.event
 async def on_ready():
+    global CHANNEL
+    global REDDIT
+    
     CHANNEL = bot.get_channel(1490949539367227432)
     await CHANNEL.send("Booted Up!")
-        
+
     REDDIT = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
