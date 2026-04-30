@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 REDDIT = None
 CHANNEL = None
-HISTORY_IDS = set()
+HISTORY_IDS = []
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
 PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
@@ -136,7 +136,7 @@ async def check_posts():
         subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < time.time() - (60 * 60) or post.id.lower() in HISTORY_IDS:
+            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS:
                 continue
 
             title = post.title.lower()
@@ -153,6 +153,9 @@ async def check_posts():
                 user_info in FORBIDDEN_SUBS or 
                 any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT)):
                 continue
+
+            HISTORY_IDS.add(post.id)
+            if len(HISTORY_IDS) > 3: HISTORY_IDS.pop(0)
 
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
@@ -242,7 +245,7 @@ async def on_ready():
     async for m in CHANNEL.history(limit=3):
         match = RE_HISTORY.search(m.content.lower())
         if match and m.author == bot.user:
-            HISTORY_IDS.add(match.group(1))
+            HISTORY_IDS.append(match.group(1))
     
     check_posts.start()
     
