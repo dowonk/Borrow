@@ -136,20 +136,23 @@ async def check_posts():
         subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < time.time() - (60 * 60): continue
-            if post.id.lower() in HISTORY_IDS: continue
+            if post.created_utc < time.time() - (60 * 60) or post.id.lower() in HISTORY_IDS:
+                continue
 
             title = post.title.lower()
-            if "req" not in title: continue
-            if any(word in title for word in PREARRANGED_WORDS): continue
-            if not any(word in title for word in LOCATIONS): continue
+            if ("req" not in title or 
+                any(word in title for word in PREARRANGED_WORDS) or 
+                not any(word in title for word in LOCATIONS)):
+                continue
 
             amount_match = RE_AMOUNT.search(title)
             if not amount_match or int(amount_match.group()) > 300: continue
 
             user_info = await get_user_info(post.author)
-            if user_info is None or user_info in FORBIDDEN_SUBS: continue
-            if any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT): continue
+            if (user_info is None or 
+                user_info in FORBIDDEN_SUBS or 
+                any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT)):
+                continue
 
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
