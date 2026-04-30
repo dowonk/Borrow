@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 REDDIT = None
 CHANNEL = None
-HISTORY_IDS = {}
+HISTORY_IDS = set()
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
 PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
@@ -239,7 +239,7 @@ async def on_ready():
     async for m in CHANNEL.history(limit=3):
         match = RE_HISTORY.search(m.content.lower())
         if match and m.author == bot.user:
-            HISTORY_IDS.update(match.group(1))
+            HISTORY_IDS.add(match.group(1))
     
     check_posts.start()
     
