@@ -239,7 +239,7 @@ async def on_ready():
     async for m in CHANNEL.history(limit=3):
         match = RE_HISTORY.search(m.content.lower())
         if match and m.author == bot.user:
-            HISTORY_IDS.add(match.group(1))
+            HISTORY_IDS.update(match.group(1))
     
     check_posts.start()
     
