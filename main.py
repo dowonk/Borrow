@@ -154,7 +154,7 @@ async def check_posts():
                 any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            HISTORY_IDS.add(post.id)
+            HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3: HISTORY_IDS.pop(0)
 
             message = (
