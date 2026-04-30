@@ -9,13 +9,15 @@ from discord.ext import commands, tasks
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-CHANNEL_ID = 1488789667313614930
-USER_ID = 314300380051668994
+REDDIT = None
+CHANNEL = None
+HISTORY_IDS = {}
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
 PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
 PREARRANGED_SELFTEXT = ["pre arranged", "prearranged", "pre-arranged"]
 LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state"]
+RE_HISTORY = re.compile(r'\[(.*?)\]')
 RE_AMOUNT = re.compile(r"\d+")
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
@@ -82,10 +84,6 @@ def format_time_ago(timestamp):
     return "0s"
 
 async def get_user_info(redditor):
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel:
-        return
-
     try:
         await redditor.load()
         username = redditor.name 
@@ -134,20 +132,12 @@ async def get_user_info(redditor):
 
 @tasks.loop(seconds=1)
 async def check_posts():
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel: return
-
     try:
-        subreddit = await reddit.subreddit("Borrow")
-
-        history = ""
-        async for m in channel.history(limit=3):
-            if m.author == bot.user:
-                history += m.content.lower()
+        subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
             if post.created_utc < time.time() - (60 * 60): continue
-            if post.id.lower() in history: continue
+            if post.id.lower() in HISTORY_IDS: continue
 
             title = post.title.lower()
             if "req" not in title: continue
@@ -162,13 +152,13 @@ async def check_posts():
             if any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT): continue
 
             message = (
-                f"<@{USER_ID}> {post.id}\n"
+                f"<@314300380051668994> [{post.id}]\n"
                 f"**{post.title}**\n"
                 f"{post.selftext[:500]}\n"
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
-            await channel.send(message)
+            await CHANNEL.send(message)
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
@@ -178,7 +168,7 @@ async def check(ctx, username: str):
     try:
         await ctx.send(f"Checking **/u/{username}**...")
 
-        redditor = await reddit.redditor(username)
+        redditor = await REDDIT.redditor(username)
         try:
             await redditor.load()
         except Exception:
@@ -232,18 +222,23 @@ async def check(ctx, username: str):
 
 @bot.event
 async def on_ready():
-    channel = bot.get_channel(CHANNEL_ID)
-    if not channel: return
+    CHANNEL = bot.get_channel(1490949539367227432)
+    await CHANNEL.send("Booted Up!")
         
-    global reddit
-    reddit = asyncpraw.Reddit(
+    REDDIT = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
+
+    CHANNEL = bot.get_channel(1488789667313614930)
+    
+    async for m in CHANNEL.history(limit=3):
+        match = RE_HISTORY.search(m.content.lower())
+        if match and m.author == bot.user:
+            HISTORY_IDS.add(match.group(1))
     
     check_posts.start()
-    await channel.send("Booted up!")
     
 webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
