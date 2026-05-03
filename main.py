@@ -94,7 +94,7 @@ async def get_user_info(redditor):
         async for item in redditor.new(limit=100):
             sub_name = item.subreddit.display_name.lower()
             if sub_name in FORBIDDEN_SUBS:
-                return sub_name
+                return None
             elif sub_name != "borrow":
                 activity.append(item)
 
@@ -150,7 +150,6 @@ async def check_posts():
 
             user_info = await get_user_info(post.author)
             if (user_info is None or 
-                user_info in FORBIDDEN_SUBS or 
                 any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT)):
                 continue
 
