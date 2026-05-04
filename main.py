@@ -170,8 +170,6 @@ async def check_posts():
 @bot.command()
 async def check(ctx, username: str):
     try:
-        await CHECK_CHANNEL.send(f"Checking **/u/{username}**...")
-
         redditor = await REDDIT.redditor(username)
         try:
             await redditor.load()
