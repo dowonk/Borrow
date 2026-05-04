@@ -1,23 +1,22 @@
 import os
 import re
 import time
-import asyncpraw
 import requests
+import asyncpraw
 import webserver
 import discord
 from discord.ext import commands, tasks
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-REDDIT = None
+FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
 HISTORY_IDS = []
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
-FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
+LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state"]
 PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
 PREARRANGED_SELFTEXT = ["pre arranged", "prearranged", "pre-arranged"]
-LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state"]
-RE_HISTORY = re.compile(r'\[(.*?)\]')
 RE_AMOUNT = re.compile(r"\d+")
+RE_HISTORY = re.compile(r'\[(.*?)\]')
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
