@@ -10,8 +10,6 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 REDDIT = None
-MAIN_CHANNEL = bot.get_channel(1488789667313614930)
-CHECK_CHANNEL = bot.get_channel(1490949539367227432)
 HISTORY_IDS = []
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
@@ -230,7 +228,11 @@ async def check(ctx, username: str):
 @bot.event
 async def on_ready():
     global REDDIT
+    global MAIN_CHANNEL
+    global CHECK_CHANNEL
 
+    MAIN_CHANNEL = bot.get_channel(1488789667313614930)
+    CHECK_CHANNEL = bot.get_channel(1490949539367227432)
     REDDIT = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
