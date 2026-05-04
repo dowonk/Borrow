@@ -10,7 +10,8 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 REDDIT = None
-CHANNEL = None
+MAIN_CHANNEL = bot.get_channel(1488789667313614930)
+CHECK_CHANNEL = bot.get_channel(1490949539367227432)
 HISTORY_IDS = []
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
@@ -163,7 +164,8 @@ async def check_posts():
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
-            await CHANNEL.send(message)
+            await MAIN_CHANNEL.send(message)
+            await check.callback(None, str(post.author))
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
@@ -171,13 +173,13 @@ async def check_posts():
 @bot.command()
 async def check(ctx, username: str):
     try:
-        await ctx.send(f"Checking **/u/{username}**...")
+        await CHECK_CHANNEL.send(f"Checking **/u/{username}**...")
 
         redditor = await REDDIT.redditor(username)
         try:
             await redditor.load()
         except Exception:
-            return await ctx.send(f"**/u/{username}** not found.")
+            return await CHECK_CHANNEL.send(f"**/u/{username}** not found.")
 
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
@@ -217,35 +219,30 @@ async def check(ctx, username: str):
         )
 
         if len(report) <= 2000:
-            await ctx.send(report)
+            await CHECK_CHANNEL.send(report)
         else:
             for i in range(0, len(report), 2000):
-                await ctx.send(report[i:i+2000])
+                await CHECK_CHANNEL.send(report[i:i+2000])
 
     except Exception as e:
         print(f"Error in check command: {e}")
 
 @bot.event
 async def on_ready():
-    global CHANNEL
     global REDDIT
-    
-    CHANNEL = bot.get_channel(1490949539367227432)
-    await CHANNEL.send("Booted Up!")
 
     REDDIT = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
-
-    CHANNEL = bot.get_channel(1488789667313614930)
     
-    async for m in CHANNEL.history(limit=3):
+    async for m in MAIN_CHANNEL.history(limit=3):
         match = RE_HISTORY.search(m.content.lower())
         if match and m.author == bot.user:
             HISTORY_IDS.append(match.group(1))
-    
+
+    await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
     
 webserver.keep_alive()
