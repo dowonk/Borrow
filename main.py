@@ -144,7 +144,7 @@ async def check_posts():
                 continue
 
             amount_match = RE_AMOUNT.search(title)
-            if not amount_match or int(amount_match.group()) > 300: continue
+            if not amount_match or int(amount_match.group()) > 500: continue
 
             user_info = await get_user_info(post.author)
             if (user_info is None or 
