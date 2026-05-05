@@ -224,6 +224,8 @@ async def check(ctx, username: str):
 
 @bot.event
 async def on_ready():
+    await bot.wait_until_ready()
+    
     global REDDIT
     global MAIN_CHANNEL
     global CHECK_CHANNEL
