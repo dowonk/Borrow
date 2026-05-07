@@ -63,14 +63,11 @@ def get_loans(username, max_workers=20):
     ]
 
     if not in_progress:
-        loans_report += " | *None*"
+        loans_report += " | **In-progress: *None*"
     else:
         loans_report += f" | **In-progress ({len(in_progress)}):**"
         for loan in in_progress:
-            loans_report += (
-                f" *${loan['principal_minor']/100:.0f} | "
-                f"Lender: {loan['lender']} |*"
-            )
+            loans_report += f" *${loan['principal_minor']/100:.0f} | "
 
     return loans_report
 
@@ -99,13 +96,11 @@ async def get_user_info(redditor):
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report = [f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*"]
+                user_report = [f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n"]
             else:
-                user_report = [f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*"]
+                user_report = [f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
-            
-        user_report.append(get_loans(username) + "\n")
 
         if not activity:
             user_report.append("*Hidden profile*")
@@ -209,8 +204,7 @@ async def check(ctx, username: str):
 
         report = (
             f"Report for **/u/{username}**\n"
-            f"**Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n"
-            f"{user_loans}\n\n"
+            f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
