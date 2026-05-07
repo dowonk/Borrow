@@ -154,10 +154,12 @@ async def check_posts():
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3: HISTORY_IDS.pop(0)
 
+            selftext = f"{post.selftext}" if post.selftext else ""
+
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**{post.title}**\n"
-                f"*{post.selftext[:500]}*\n"
+                f"*{selftext[:500]}*\n"
                 f"<{post.url}>\n\n"
                 f"{user_info}"
             )
