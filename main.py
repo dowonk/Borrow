@@ -67,7 +67,7 @@ def get_loans(username, max_workers=20):
     else:
         loans_report += f" | **In-progress ({len(in_progress)}):**"
         for loan in in_progress:
-            loans_report += f" *${loan['principal_minor']/100:.0f} | "
+            loans_report += f" *${loan['principal_minor']/100:.0f}*"
 
     return loans_report
 
