@@ -62,10 +62,9 @@ def get_loans(username, max_workers=20):
         and not loan["deleted_at"]
     ]
 
-    if not in_progress:
-        loans_report += " | **In-progress: *None*"
-    else:
-        loans_report += f" | **In-progress ({len(in_progress)}):**"
+    loans_report += " | **Open:**"
+
+    if in_progress:
         for loan in in_progress:
             loans_report += f" *${loan['principal_minor']/100:.0f}*"
 
