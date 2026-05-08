@@ -64,6 +64,8 @@ def get_loans(username, max_workers=20):
 
     loans_report += " | **Open:**"
 
+    if not in_progress:
+        loans_report += f" *$0*"
     if in_progress:
         for loan in in_progress:
             loans_report += f" *${loan['principal_minor']/100:.0f}*"
