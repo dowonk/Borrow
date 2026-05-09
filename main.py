@@ -114,8 +114,8 @@ async def get_user_info(redditor):
         links = [
             f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
             f"**Profile:** <https://www.reddit.com/user/{username}>",
-            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{username}&include_over_18=on&sort=new&t=all>",
             f"**Loans:** <https://redditloans.com/loans.html?username={username}>",
+            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{username}&include_over_18=on&sort=new&t=all>",
             f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
         ]
         return "\n".join(user_report + links)
@@ -238,7 +238,7 @@ async def on_ready():
     async for m in MAIN_CHANNEL.history(limit=3):
         match = RE_HISTORY.search(m.content.lower())
         if match and m.author == bot.user:
-            HISTORY_IDS.append(match.group(1))
+            HISTORY_IDS.insert(0, match.group(1))
 
     await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
