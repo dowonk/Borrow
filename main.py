@@ -109,7 +109,7 @@ async def get_user_info(redditor):
             for item in activity[:5]:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
                 text = text.replace('\n', ' ')[:100]
-                user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}...*")
+                user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
 
         links = [
             f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
