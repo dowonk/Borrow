@@ -8,12 +8,12 @@ import discord
 from discord.ext import commands, tasks
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
+FORBIDDEN_SUBS = ("borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans")
 HISTORY_IDS = []
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
-LOCATIONS = ["usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state"]
-PREARRANGED_WORDS = ["pre ", "pre-", "arrange"]
-PREARRANGED_SELFTEXT = ["pre arranged", "prearranged", "pre-arranged"]
+LOCATIONS = ("usa", "u.s.a", "u.s.a.", "u.s.", "u.s", "us)", "state")
+PREARRANGED_WORDS = ("pre ", "pre-", "arrange")
+PREARRANGED_SELFTEXT = ("pre arranged", "prearranged", "pre-arranged")
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
 
