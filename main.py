@@ -6,7 +6,6 @@ import asyncpraw
 import webserver
 import discord
 from discord.ext import commands, tasks
-from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 FORBIDDEN_SUBS = ["borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"]
