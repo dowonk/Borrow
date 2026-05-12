@@ -209,11 +209,8 @@ async def check(ctx, username: str):
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
 
-        if len(report) <= 2000:
-            await CHECK_CHANNEL.send(report)
-        else:
-            for i in range(0, len(report), 2000):
-                await CHECK_CHANNEL.send(report[i:i+2000])
+        for i in range(0, len(report), 2000):
+            await CHECK_CHANNEL.send(report[i:i+2000])
 
     except Exception as e:
         print(f"Error in check command: {e}")
