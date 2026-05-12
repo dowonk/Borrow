@@ -175,7 +175,6 @@ async def check(ctx, username: str):
 
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
-        user_loans = get_loans(username)
 
         try:
             moderated_subs = await redditor.moderated()
