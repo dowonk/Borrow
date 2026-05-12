@@ -121,7 +121,7 @@ async def get_user_info(redditor):
         print(f"Error in get_user_info: {e}")
         return None
 
-@tasks.loop(seconds=.4)
+@tasks.loop(seconds=.7)
 async def check_posts():
     try:
         subreddit = await REDDIT.subreddit("Borrow")
