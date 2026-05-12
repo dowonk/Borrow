@@ -87,12 +87,16 @@ async def get_user_info(redditor):
             elif sub_name != "borrow":
                 activity.append(item)
 
+        loans = get_loans(redditor.name)
+        karma = redditor.link_karma + redditor.comment_karma
+        age = format_time_ago(redditor.created_utc)
+
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report = [f"{get_loans(redditor.name)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *None*\n"]
+                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n"]
             else:
-                user_report = [f"{get_loans(redditor.name)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
+                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
 
@@ -182,18 +186,22 @@ async def check(ctx, username: str):
         subreddit_list = []
         forbidden_list = []
 
-        for sub in sorted(list(unique_subs), key=lambda s: s.lower()):
+        for sub in sorted(unique_subs, key=str.lower):
             if sub.lower() in FORBIDDEN_SUBS:
-                forbidden_list.append(f"{sub}")
+                forbidden_list.append(sub)
             else:
-                subreddit_list.append(f"{sub}")
+                subreddit_list.append(sub)
 
         subreddit_report = ", ".join(subreddit_list) if subreddit_list else "None"
         forbidden_report = ", ".join(forbidden_list) if forbidden_list else "None"
 
+        loans = get_loans(redditor.name)
+        karma = redditor.link_karma + redditor.comment_karma
+        age = format_time_ago(redditor.created_utc)
+
         report = (
             f"Report for **/u/{username}**\n"
-            f"{get_loans(username)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *{moderated_list}*\n\n"
+            f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
