@@ -62,7 +62,7 @@ def get_loans(username, max_workers=20):
     ]
 
     if in_progress:
-        loans_report += " | **Open:**" + " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress)
+        loans_report += " | **Open:** " + " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress)
     else:
         loans_report += " | **Open:** *$0*"
 
