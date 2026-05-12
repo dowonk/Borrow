@@ -43,8 +43,8 @@ def get_loans(username, max_workers=20):
                     resp = future.result()
                     if resp.status_code == 200:
                         results[loan_id] = resp.json()
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Error: {e}")
 
     valid = [
         loan for loan in results.values() 
@@ -61,13 +61,10 @@ def get_loans(username, max_workers=20):
         and not loan["deleted_at"]
     ]
 
-    loans_report += " | **Open:**"
-
-    if not in_progress:
-        loans_report += f" *$0*"
     if in_progress:
-        for loan in in_progress:
-            loans_report += f" *${loan['principal_minor']/100:.0f}*"
+        loans_report += " | **Open:**" + " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress)
+    else:
+        loans_report += " | **Open:** *$0*"
 
     return loans_report
 
@@ -81,9 +78,6 @@ def format_time_ago(timestamp):
 async def get_user_info(redditor):
     try:
         await redditor.load()
-        username = redditor.name 
-        karma = redditor.link_karma + redditor.comment_karma
-        age = format_time_ago(redditor.created_utc)
 
         activity = []
         async for item in redditor.new(limit=100):
@@ -96,9 +90,9 @@ async def get_user_info(redditor):
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report = [f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n"]
+                user_report = [f"{get_loans(redditor.name)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *None*\n"]
             else:
-                user_report = [f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
+                user_report = [f"{get_loans(redditor.name)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
 
@@ -112,10 +106,10 @@ async def get_user_info(redditor):
 
         links = [
             f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
-            f"**Profile:** <https://www.reddit.com/user/{username}>",
-            f"**Loans:** <https://redditloans.com/loans.html?username={username}>",
-            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{username}&include_over_18=on&sort=new&t=all>",
-            f"**USL:** <https://www.universalscammerlist.com/?username={username}>"
+            f"**Profile:** <https://www.reddit.com/user/{redditor.name}>",
+            f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
+            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>",
+            f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
         ]
         return "\n".join(user_report + links)
 
@@ -172,16 +166,12 @@ async def check(ctx, username: str):
             await redditor.load()
         except Exception:
             return await CHECK_CHANNEL.send(f"**/u/{username}** not found.")
-
-        karma = redditor.link_karma + redditor.comment_karma
-        age = format_time_ago(redditor.created_utc)
-
+            
+        moderated_list = "None"
         try:
             moderated_subs = await redditor.moderated()
-            if not moderated_subs:
-                moderated_list = "None"
-            else:
-                moderated_list = ", ".join([f"{s.display_name}" for s in moderated_subs])
+            if moderated_subs:
+                moderated_list = ", ".join(s.display_name for s in moderated_subs)
         except Exception as e:
             print(f"Error: {e}")
 
@@ -203,7 +193,7 @@ async def check(ctx, username: str):
 
         report = (
             f"Report for **/u/{username}**\n"
-            f"{get_loans(username)} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n\n"
+            f"{get_loans(username)} | **Karma:** *{redditor.link_karma + redditor.comment_karma}* | **Age:** *{format_time_ago(redditor.created_utc)}* | **Moderating:** *{moderated_list}*\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
