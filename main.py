@@ -80,7 +80,7 @@ async def get_user_info(redditor):
         await redditor.load()
 
         activity = []
-        async for item in redditor.new(limit=100):
+        async for item in redditor.new(limit=50):
             sub_name = item.subreddit.display_name.lower()
             if sub_name in FORBIDDEN_SUBS:
                 return None
