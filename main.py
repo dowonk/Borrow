@@ -87,6 +87,9 @@ async def get_user_info(redditor):
             elif sub_name != "borrow":
                 activity.append(item)
 
+            if len(activity) == 5:
+                break
+
         loans = get_loans(redditor.name)
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
