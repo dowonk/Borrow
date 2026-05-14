@@ -116,6 +116,7 @@ async def get_user_info(redditor):
             f"**Profile:** <https://www.reddit.com/user/{redditor.name}>",
             f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
             f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>",
+            f"**Name Posts:** <https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>",
             f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
         ]
         return "\n".join(user_report + links)
@@ -154,9 +155,8 @@ async def check_posts():
 
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
-                f"**{post.title}**\n"
-                f"*{selftext[:500]}*\n"
-                f"<{post.url}>\n\n"
+                f"**[{post.title}](<{post.url}**\n"
+                f"*{selftext[:500]}*\n\n"
                 f"{user_info}"
             )
             await MAIN_CHANNEL.send(message)
