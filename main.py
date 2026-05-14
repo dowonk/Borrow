@@ -106,7 +106,7 @@ async def get_user_info(redditor):
         if not activity:
             user_report.append("*Hidden profile*")
         else:
-            for item in activity[:5]:
+            for item in activity:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
                 text = text.replace('\n', ' ')[:100]
                 user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
