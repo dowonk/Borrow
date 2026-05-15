@@ -112,12 +112,12 @@ async def get_user_info(redditor):
                 user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
 
         links = (
-            f"[Message](https://www.reddit.com/chat/user/t2_{redditor.id}) - "
-            f"[{redditor.name}](https://www.reddit.com/user/{redditor.name}) - "
-            f"[Loans](https://redditloans.com/loans.html?username={redditor.name}) - "
-            f"[Posts](https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all) - "
-            f"[Search](https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance) - "
-            f"[USL](https://www.universalscammerlist.com/?username={redditor.name})"
+            f"**[Message]**(https://www.reddit.com/chat/user/t2_{redditor.id}) - "
+            f"**[{redditor.name}]**(https://www.reddit.com/user/{redditor.name}) - "
+            f"**[Loans]**(https://redditloans.com/loans.html?username={redditor.name}) - "
+            f"**[Posts]**(https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all) - "
+            f"**[Search]**(https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance) - "
+            f"**[USL]**(https://www.universalscammerlist.com/?username={redditor.name})"
         )
         
         return (user_report + links)
