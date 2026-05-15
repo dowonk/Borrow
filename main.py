@@ -95,20 +95,18 @@ async def get_user_info(redditor):
         age = format_time_ago(redditor.created_utc)
 
         try:
-            moderated_subs = await redditor.moderated()
-            if not moderated_subs:
-                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n\n"]
-            else:
-                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n\n"]
+            moderated = await redditor.moderated()
+            moderated_subs = ", ".join(s.display_name for s in moderated) if moderated else "None"
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
+
+        user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_subs}*\n\n"]
 
         if not activity:
             user_report.append("*Hidden profile*\n\n")
         else:
             for item in activity:
-                text = getattr(item, 'title', getattr(item, 'body', ''))
-                text = text.replace('\n', ' ')[:100]
+                text = getattr(item, 'title', getattr(item, 'body', '')).replace('\n', ' ')[:100]
                 user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
 
         links = (
@@ -120,7 +118,7 @@ async def get_user_info(redditor):
             f"**[USL]**(https://www.universalscammerlist.com/?username={redditor.name})"
         )
         
-        return (user_report + links)
+        return "".join(user_report) + links
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
