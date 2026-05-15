@@ -166,13 +166,11 @@ async def check(ctx, username: str):
         except Exception:
             return await CHECK_CHANNEL.send(f"**/u/{username}** not found.")
             
-        moderated_list = "None"
         try:
-            moderated_subs = await redditor.moderated()
-            if moderated_subs:
-                moderated_list = ", ".join(s.display_name for s in moderated_subs)
+            moderated = await redditor.moderated()
+            moderated_subs = ", ".join(s.display_name for s in moderated) if moderated else "None"
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error getting moderated subs: {e}")
 
         unique_subs = set()
         async for item in redditor.new(limit=1000):
@@ -196,7 +194,7 @@ async def check(ctx, username: str):
 
         report = (
             f"**{username}**\n"
-            f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n\n"
+            f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_subs}*\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
         )
