@@ -61,18 +61,14 @@ def get_loans(username, max_workers=20):
         and not loan["deleted_at"]
     ]
 
-    if in_progress:
-        loans_report += " | **Open:** " + " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress)
-    else:
-        loans_report += " | **Open:** *$0*"
+    loans_report += " | **Open:** " + (" ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress) if in_progress else "*$0*")
 
     return loans_report
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
     for label, seconds in INTERVALS:
-        if diff >= seconds:
-            return f"{diff // seconds}{label}"
+        if diff >= seconds: return f"{diff // seconds}{label}"
     return "0s"
 
 async def get_user_info(redditor):
@@ -82,11 +78,9 @@ async def get_user_info(redditor):
         activity = []
         async for item in redditor.new(limit=50):
             sub_name = item.subreddit.display_name.lower()
-            if sub_name in FORBIDDEN_SUBS:
-                return None
-            elif sub_name != "borrow":
-                activity.append(item)
-
+            
+            if sub_name in FORBIDDEN_SUBS: return None
+            if sub_name != "borrow": activity.append(item)
             if len(activity) == 5:
                 break
 
@@ -130,8 +124,7 @@ async def check_posts():
         subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS:
-                continue
+            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS: continue
 
             title = post.title.lower()
             if ("req" not in title or 
