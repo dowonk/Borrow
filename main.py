@@ -56,7 +56,7 @@ def get_loans(username, max_workers=20):
         if not loan["repaid_at"] and not loan["unpaid_at"] and not loan["deleted_at"]
     ]
 
-    total = sum(l["principal_minor"] for l in valid
+    total = sum(l["principal_minor"] for l in valid)
     open = " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress) if in_progress else "*$0*"
 
     loans_report = f"**Total:** *${total/100:.0f}* | **Open:** {open}"
