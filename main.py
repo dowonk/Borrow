@@ -122,7 +122,7 @@ async def check_posts():
         subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS
+            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS:
                 continue
 
             title = post.title.lower()
