@@ -51,17 +51,15 @@ def get_loans(username, max_workers=20):
         if loan["borrower"].lower() == username.lower()
     ]
 
-    total_borrowed = sum(l["principal_minor"] for l in valid)
-    loans_report = f"**Total:** *${total_borrowed/100:.0f}*"
-
     in_progress = [
         loan for loan in valid
-        if not loan["repaid_at"]
-        and not loan["unpaid_at"]
-        and not loan["deleted_at"]
+        if not loan["repaid_at"] and not loan["unpaid_at"] and not loan["deleted_at"]
     ]
 
-    loans_report += " | **Open:** " + (" ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress) if in_progress else "*$0*")
+    total = sum(l["principal_minor"] for l in valid
+    open = " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress) if in_progress else "*$0*"
+
+    loans_report = f"**Total:** *${total/100:.0f}* | **Open:** {open}"
 
     return loans_report
 
@@ -124,7 +122,8 @@ async def check_posts():
         subreddit = await REDDIT.subreddit("Borrow")
 
         async for post in subreddit.new(limit=3):
-            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS: continue
+            if post.created_utc < time.time() - (60 * 60) or post.id in HISTORY_IDS
+                continue
 
             title = post.title.lower()
             if ("req" not in title or 
@@ -133,7 +132,8 @@ async def check_posts():
                 continue
 
             amount_match = RE_AMOUNT.search(title)
-            if not amount_match or int(amount_match.group()) > 500: continue
+            if not amount_match or int(amount_match.group()) > 500:
+                continue
 
             user_info = await get_user_info(post.author)
             if (user_info is None or 
