@@ -100,7 +100,16 @@ async def get_user_info(redditor):
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
 
-        user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_subs}*\n"]
+        links = (
+                f"**[Message](<https://www.reddit.com/chat/user/t2_{redditor.id}>) -** "
+                f"**[Profile](<https://www.reddit.com/user/{redditor.name}>) -** "
+                f"**[Loans](<https://redditloans.com/loans.html?username={redditor.name}>) -** "
+                f"**[Posts](<https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>) -** "
+                f"**[Search](<https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>) -** "
+                f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
+        )
+
+        user_report = [f"**{redditor.name}**\n{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_subs}*\n{links}\n"]
 
         if not activity:
             user_report.append("*Hidden profile*\n")
@@ -108,17 +117,8 @@ async def get_user_info(redditor):
             for item in activity:
                 text = getattr(item, 'title', getattr(item, 'body', '')).replace('\n', ' ')[:100]
                 user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
-
-        links = (
-                f"\n\n**[Message](<https://www.reddit.com/chat/user/t2_{redditor.id}>) -** "
-                f"**[{redditor.name}](<https://www.reddit.com/user/{redditor.name}>) -** "
-                f"**[Loans](<https://redditloans.com/loans.html?username={redditor.name}>) -** "
-                f"**[Posts](<https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>) -** "
-                f"**[Search](<https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>) -** "
-                f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
-        )
         
-        return "\n".join(user_report) + links
+        return "\n".join(user_report)
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
@@ -202,7 +202,7 @@ async def check(ctx, username: str):
         age = format_time_ago(redditor.created_utc)
 
         report = (
-            f"Report for **/u/{username}**\n"
+            f"**{username}**\n"
             f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *{moderated_list}*\n\n"
             f"**Subreddits:**\n{subreddit_report}\n\n"
             f"**Forbidden Subreddits:**\n{forbidden_report}"
