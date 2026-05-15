@@ -97,29 +97,30 @@ async def get_user_info(redditor):
         try:
             moderated_subs = await redditor.moderated()
             if not moderated_subs:
-                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n"]
+                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *None*\n\n"]
             else:
-                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n"]
+                user_report = [f"{loans} | **Karma:** *{karma}* | **Age:** *{age}* | **Moderating:** *" + ", ".join([f"{s.display_name}" for s in moderated_subs]) + "*\n\n"]
         except Exception as e:
             print(f"Error getting moderated subs: {e}")
 
         if not activity:
-            user_report.append("*Hidden profile*")
+            user_report.append("*Hidden profile*\n\n")
         else:
             for item in activity:
                 text = getattr(item, 'title', getattr(item, 'body', ''))
                 text = text.replace('\n', ' ')[:100]
                 user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
 
-        links = [
-            f"\n**DM:** <https://www.reddit.com/chat/user/t2_{redditor.id}>",
-            f"**Profile:** <https://www.reddit.com/user/{redditor.name}>",
-            f"**Loans:** <https://redditloans.com/loans.html?username={redditor.name}>",
-            f"**Posts:** <https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>",
-            f"**Name Posts:** <https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>",
-            f"**USL:** <https://www.universalscammerlist.com/?username={redditor.name}>"
-        ]
-        return "\n".join(user_report + links)
+        links = (
+            f"[Message](https://www.reddit.com/chat/user/t2_{redditor.id}) - "
+            f"[{redditor.name}](https://www.reddit.com/user/{redditor.name}) - "
+            f"[Loans](https://redditloans.com/loans.html?username={redditor.name}) - "
+            f"[Posts](https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all) - "
+            f"[Search](https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance) - "
+            f"[USL](https://www.universalscammerlist.com/?username={redditor.name})"
+        )
+        
+        return (user_report + links)
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
@@ -155,7 +156,7 @@ async def check_posts():
 
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
-                f"**[{post.title}](<{post.url}**\n"
+                f"**[{post.title}](<{post.url}>**\n"
                 f"*{selftext[:500]}*\n\n"
                 f"{user_info}"
             )
