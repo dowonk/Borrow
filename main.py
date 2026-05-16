@@ -19,7 +19,7 @@ RE_HISTORY = re.compile(r'\[(.*?)\]')
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def get_loans(username, max_workers=20):
+def get_loans(username, max_workers=None):
     headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
     results = {}
 
@@ -143,7 +143,7 @@ async def check_posts():
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3: HISTORY_IDS.pop(0)
 
-            selftext = f"{post.selftext}" if post.selftext else "No selftext"
+            selftext = f"{post.selftext}" if post.selftext else "None"
 
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
