@@ -12,17 +12,28 @@ FORBIDDEN_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspayday
 LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state"})
 PREARRANGED_WORDS = frozenset({"pre ", "pre-", "arrange"})
 PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"})
+
 HISTORY_IDS = []
-INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
+
+INTERVALS = (
+    ('Y', 31536000),
+    ('MO', 2592000),
+    ('D', 86400),
+    ('H', 3600),
+    ('M', 60),
+    ('S', 1)
+)
+
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
+
 HTTP_SESSION = None
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
 async def get_loans(username: str) -> str:
     headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
     base_url = "https://redditloans.com/api/loans"
-    fallback = "**Total:** *$0* | **Open:** *$0*"
+    username_l = username.lower()
 
     try:
         async with HTTP_SESSION.get(
@@ -32,24 +43,29 @@ async def get_loans(username: str) -> str:
             timeout=aiohttp.ClientTimeout(total=4)
         ) as r:
             if r.status != 200:
-                return fallback
+                return "*Error fetching loans**"
             loan_ids = await r.json()
     except Exception:
-        return fallback
+        return "*Error fetching loans**"
 
     if not loan_ids:
-        return fallback
+        return "**Total:** *$0* | **Open:** *$0*"
+
+    sem = asyncio.Semaphore(50)
 
     async def fetch_loan(lid):
-        try:
-            async with HTTP_SESSION.get(
-                f"{base_url}/{lid}",
-                headers=headers,
-                timeout=aiohttp.ClientTimeout(total=2.5)
-            ) as resp:
-                return await resp.json() if resp.status == 200 else None
-        except Exception:
-            return None
+        async with sem:
+            try:
+                async with HTTP_SESSION.get(
+                    f"{base_url}/{lid}",
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=2.5)
+                ) as resp:
+                    if resp.status == 200:
+                        return await resp.json(content_type=None)
+            except Exception:
+                return None
+        return None
 
     loans_data = await asyncio.gather(*(fetch_loan(lid) for lid in loan_ids))
 
@@ -57,17 +73,24 @@ async def get_loans(username: str) -> str:
     open_loans = []
 
     for loan in loans_data:
-        if not loan or loan.get("borrower", "").lower() != username.lower():
+        if not loan:
             continue
 
-        principal = loan.get("principal_minor", 0)
+        if loan.get("borrower", "").lower() != username_l:
+            continue
+
+        principal = loan.get("principal_minor") or 0
         total += principal
 
-        if not loan.get("repaid_at") and not loan.get("unpaid_at") and not loan.get("deleted_at"):
+        if not (
+            loan.get("repaid_at")
+            or loan.get("unpaid_at")
+            or loan.get("deleted_at")
+        ):
             open_loans.append(f"*${principal / 100:.0f}*")
 
-    open = " ".join(open_loans) if open_loans else "*$0*"
-    return f"**Total:** *${total / 100:.0f}* | **Open:** {open}"
+    open_str = " ".join(open_loans) if open_loans else "*$0*"
+    return f"**Total:** *${total / 100:.0f}* | **Open:** {open_str}"
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
@@ -78,24 +101,25 @@ def format_time_ago(timestamp):
 
 async def get_user_info(redditor):
     try:
-        load_task = asyncio.create_task(redditor.load())
-        loans_task = asyncio.create_task(get_loans(redditor.name))
+        lower = str.lower
+
+        await redditor.load()
+        loans_task = get_loans(redditor.name)
 
         activity = []
         async for item in redditor.new(limit=50):
-            sub_name = item.subreddit.display_name.lower()
+            sub_name = lower(item.subreddit.display_name)
+
             if sub_name in FORBIDDEN_SUBS:
-                load_task.cancel()
-                loans_task.cancel()
                 return None
+
             if sub_name != "borrow":
                 activity.append(item)
+
             if len(activity) == 5:
                 break
 
-        await load_task
         loans = await loans_task
-
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
 
@@ -115,7 +139,9 @@ async def get_user_info(redditor):
         else:
             for item in activity:
                 text = getattr(item, 'title', getattr(item, 'body', '')).replace('\n', ' ')[:100]
-                user_report.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
+                user_report.append(
+                    f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*"
+                )
 
         return "\n".join(user_report)
 
@@ -131,19 +157,17 @@ async def check_posts():
                 continue
 
             title = post.title.lower()
-            if (
-                "req" not in title 
-                or any(word in title for word in PREARRANGED_WORDS) 
-                or not any(word in title for word in LOCATIONS)
-            ):
+
+            if ("req" not in title
+                    or any(word in title for word in PREARRANGED_WORDS)
+                    or not any(word in title for word in LOCATIONS)):
                 continue
 
             amount_match = RE_AMOUNT.search(title)
-            if (
-                not amount_match 
-                or int(amount_match.group()) > 500 
-                or any(text in post.selftext.lower() for text in PREARRANGED_SELFTEXT)
-            ):
+
+            if (not amount_match
+                    or int(amount_match.group()) > 500
+                    or any(text in (post.selftext or "").lower() for text in PREARRANGED_SELFTEXT)):
                 continue
 
             user_info = await get_user_info(post.author)
@@ -154,15 +178,17 @@ async def check_posts():
             if len(HISTORY_IDS) > 3:
                 HISTORY_IDS.pop(0)
 
-            selftext = post.selftext if post.selftext else "None"
+            selftext = post.selftext or "None"
+
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
                 f"*{selftext[:500]}*\n\n"
                 f"{user_info}"
             )
-            
+
             await MAIN_CHANNEL.send(message)
+
             asyncio.create_task(run_check_logic(str(post.author)))
 
     except Exception as e:
@@ -171,11 +197,12 @@ async def check_posts():
 async def run_check_logic(username: str):
     try:
         redditor = await REDDIT.redditor(username)
+        await redditor.load()
 
-        load_task = asyncio.create_task(redditor.load())
-        loans_task = asyncio.create_task(get_loans(username))
+        loans_task = get_loans(username)
 
         unique_subs = set()
+
         async for item in redditor.new(limit=1000):
             unique_subs.add(item.subreddit.display_name)
 
@@ -188,24 +215,19 @@ async def run_check_logic(username: str):
             else:
                 subreddit_list.append(sub)
 
-        subreddit_report = ", ".join(subreddit_list) if subreddit_list else "None"
-        forbidden_report = ", ".join(forbidden_list) if forbidden_list else "None"
-
-        await load_task
         loans = await loans_task
-
         karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
 
         report = (
             f"**{username}**\n"
             f"{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n\n"
-            f"**Subreddits:**\n{subreddit_report}\n\n"
-            f"**Forbidden Subreddits:**\n{forbidden_report}"
+            f"**Subreddits:**\n{', '.join(subreddit_list) if subreddit_list else 'None'}\n\n"
+            f"**Forbidden Subreddits:**\n{', '.join(forbidden_list) if forbidden_list else 'None'}"
         )
 
         for i in range(0, len(report), 2000):
-            await CHECK_CHANNEL.send(report[i:i+2000])
+            await CHECK_CHANNEL.send(report[i:i + 2000])
 
     except Exception as e:
         print(f"Error executing lookups: {e}")
@@ -218,13 +240,19 @@ async def check(ctx, username: str):
 async def on_ready():
     global REDDIT, SUBREDDIT, MAIN_CHANNEL, CHECK_CHANNEL, HTTP_SESSION
 
-    HTTP_SESSION = aiohttp.ClientSession()
+    connector = aiohttp.TCPConnector(
+        limit=100,
+        ttl_dns_cache=300,
+        enable_cleanup_closed=True
+    )
+    HTTP_SESSION = aiohttp.ClientSession(connector=connector)
 
     REDDIT = asyncpraw.Reddit(
         client_id=os.environ['CLIENT_ID'],
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
+
     SUBREDDIT = await REDDIT.subreddit("Borrow")
 
     MAIN_CHANNEL = bot.get_channel(1488789667313614930)
