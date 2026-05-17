@@ -15,14 +15,7 @@ PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"}
 
 HISTORY_IDS = []
 
-INTERVALS = (
-    ('Y', 31536000),
-    ('MO', 2592000),
-    ('D', 86400),
-    ('H', 3600),
-    ('M', 60),
-    ('S', 1)
-)
+INTERVALS = (('Y', 31536000),('MO', 2592000),('D', 86400),('H', 3600),('M', 60),('S', 1))
 
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
@@ -89,8 +82,8 @@ async def get_loans(username: str) -> str:
         ):
             open_loans.append(f"*${principal / 100:.0f}*")
 
-    open_str = " ".join(open_loans) if open_loans else "*$0*"
-    return f"**Total:** *${total / 100:.0f}* | **Open:** {open_str}"
+    open = " ".join(open_loans) if open_loans else "*$0*"
+    return f"**Total:** *${total / 100:.0f}* | **Open:** {open}"
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
@@ -102,20 +95,23 @@ def format_time_ago(timestamp):
 async def get_user_info(redditor):
     try:
         lower = str.lower
-
+        loans_task = asyncio.create_task(get_loans(redditor.name))
         await redditor.load()
-        
-        loans_task = get_loans(redditor.name)
 
         activity = []
+
         async for item in redditor.new(limit=50):
             sub_name = lower(item.subreddit.display_name)
 
             if sub_name in FORBIDDEN_SUBS:
+                loans_task.cancel()
                 return None
 
-            if sub_name != "borrow":
-                activity.append(item)
+            if sub_name == "borrow":
+                continue
+
+            text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
+            activity.append(f"[{format_time_ago(item.created_utc)}] "f"**r/{item.subreddit.display_name}** *{text}*")
 
             if len(activity) == 5:
                 break
@@ -133,18 +129,12 @@ async def get_user_info(redditor):
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
-        user_report = [f"**{redditor.name}**\n{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n{links}\n"]
+        header = (f"**{redditor.name}**\n{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n{links}\n")
 
         if not activity:
-            user_report.append("*Hidden profile*\n")
-        else:
-            for item in activity:
-                text = getattr(item, 'title', getattr(item, 'body', '')).replace('\n', ' ')[:100]
-                user_report.append(
-                    f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*"
-                )
+            return header + "*Hidden profile*\n"
 
-        return "\n".join(user_report)
+        return header + "\n\n".join(activity)
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
@@ -153,22 +143,22 @@ async def get_user_info(redditor):
 @tasks.loop(seconds=0.8)
 async def check_posts():
     try:
+        now = time.time()
         async for post in SUBREDDIT.new(limit=3):
-            if post.id in HISTORY_IDS or post.created_utc < time.time() - 3600:
+            if post.id in HISTORY_IDS or post.created_utc < now - 3600:
                 continue
 
             title = post.title.lower()
-
             if ("req" not in title
                     or any(word in title for word in PREARRANGED_WORDS)
                     or not any(word in title for word in LOCATIONS)):
                 continue
 
             amount_match = RE_AMOUNT.search(title)
-
+            selftext_l = post.selftext.lower()
             if (not amount_match
                     or int(amount_match.group()) > 500
-                    or any(text in (post.selftext or "").lower() for text in PREARRANGED_SELFTEXT)):
+                    or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
             user_info = await get_user_info(post.author)
@@ -189,7 +179,6 @@ async def check_posts():
             )
 
             await MAIN_CHANNEL.send(message)
-
             asyncio.create_task(run_check(str(post.author)))
 
     except Exception as e:
@@ -197,19 +186,17 @@ async def check_posts():
 
 async def run_check(username: str):
     try:
+        loans_task = asyncio.create_task(get_loans(username))
+        
         redditor = await REDDIT.redditor(username)
         await redditor.load()
 
-        loans_task = get_loans(username)
-
         unique_subs = set()
-
         async for item in redditor.new(limit=1000):
             unique_subs.add(item.subreddit.display_name)
 
         subreddit_list = []
         forbidden_list = []
-
         for sub in sorted(unique_subs, key=str.lower):
             if sub.lower() in FORBIDDEN_SUBS:
                 forbidden_list.append(sub)
