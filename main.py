@@ -189,12 +189,12 @@ async def check_posts():
 
             await MAIN_CHANNEL.send(message)
 
-            asyncio.create_task(run_check_logic(str(post.author)))
+            asyncio.create_task(run_check(str(post.author)))
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
 
-async def run_check_logic(username: str):
+async def run_check(username: str):
     try:
         redditor = await REDDIT.redditor(username)
         await redditor.load()
@@ -234,7 +234,7 @@ async def run_check_logic(username: str):
 
 @bot.command()
 async def check(ctx, username: str):
-    await run_check_logic(username)
+    await run_check(username)
 
 @bot.event
 async def on_ready():
