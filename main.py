@@ -131,12 +131,12 @@ async def get_user_info(redditor):
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
-        header = (f"**{redditor.name}**\n{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n{links}\n")
+        header = (f"**{redditor.name}**\n{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n{links}\n\n")
 
         if not activity:
             return header + "*Hidden profile*\n"
 
-        return header + "\n\n".join(activity)
+        return header + "\n".join(activity)
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
