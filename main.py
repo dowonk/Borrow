@@ -104,6 +104,7 @@ async def get_user_info(redditor):
         lower = str.lower
 
         await redditor.load()
+        
         loans_task = get_loans(redditor.name)
 
         activity = []
