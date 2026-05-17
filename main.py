@@ -19,49 +19,67 @@ RE_HISTORY = re.compile(r'\[(.*?)\]')
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
-def get_loans(username, max_workers=None):
+def get_loans(username, max_workers=5):
     headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
-    results = {}
+    base_url = "https://redditloans.com/api/loans"
 
     with requests.Session() as session:
-        loan_ids = session.get(
-            "https://redditloans.com/api/loans",
-            params={"borrower_name": username, "limit": 10, "order": "id_desc"},
-            headers=headers
-        ).json()
+        adapter = requests.adapters.HTTPAdapter(
+            pool_connections=1, pool_maxsize=10
+        )
+        session.mount("https://", adapter)
 
-        url_template = "https://redditloans.com/api/loans/{}"
+        try:
+            r = session.get(
+                base_url,
+                params={
+                    "borrower_name": username,
+                    "limit": 10,
+                    "order": "id_desc",
+                },
+                headers=headers,
+                timeout=5,
+            )
+            loan_ids = r.json()
+        except Exception:
+            return "**Total:** *$0* | **Open:** *$0*"
+
+        if not loan_ids:
+            return "**Total:** *$0* | **Open:** *$0*"
+
+        def fetch_loan(lid):
+            try:
+                resp = session.get(
+                    f"{base_url}/{lid}", headers=headers, timeout=3
+                )
+                return resp.json() if resp.status_code == 200 else None
+            except Exception:
+                return None
+
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_loan = {
-                executor.submit(session.get, url_template.format(lid), headers=headers): lid 
-                for lid in loan_ids
-            }
+            loans_data = executor.map(fetch_loan, loan_ids)
 
-            for future in as_completed(future_to_loan):
-                loan_id = future_to_loan[future]
-                try:
-                    resp = future.result()
-                    if resp.status_code == 200:
-                        results[loan_id] = resp.json()
-                except Exception as e:
-                    print(f"Error: {e}")
+        total = 0
+        open_loans = []
 
-    valid = [
-        loan for loan in results.values() 
-        if loan["borrower"].lower() == username.lower()
-    ]
+        for loan in loans_data:
+            if not loan:
+                continue
 
-    in_progress = [
-        loan for loan in valid
-        if not loan["repaid_at"] and not loan["unpaid_at"] and not loan["deleted_at"]
-    ]
+            if loan.get("borrower", "").lower() == username.lower():
+                principal = loan.get("principal_minor", 0)
+                total += principal
 
-    total = sum(l["principal_minor"] for l in valid)
-    open = " ".join(f"*${loan['principal_minor']/100:.0f}*" for loan in in_progress) if in_progress else "*$0*"
+                if (
+                    not loan.get("repaid_at")
+                    and not loan.get("unpaid_at")
+                    and not loan.get("deleted_at")
+                ):
+                    open_loans.append(f"*${principal / 100:.0f}*")
 
-    loans_report = f"**Total:** *${total/100:.0f}* | **Open:** {open}"
-
-    return loans_report
+        open = " ".join(open_loans) if open_loans else "*$0*"
+        
+        return f"**Total:** *${total / 100:.0f}* | **Open:** {open}"
 
 def format_time_ago(timestamp):
     diff = int(time.time() - timestamp)
