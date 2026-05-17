@@ -253,7 +253,6 @@ async def on_ready():
         client_secret=os.environ['CLIENT_SECRET'],
         user_agent="Discord-Borrow-Bot-v1"
     )
-
     SUBREDDIT = await REDDIT.subreddit("Borrow")
 
     MAIN_CHANNEL = bot.get_channel(1488789667313614930)
