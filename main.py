@@ -38,6 +38,7 @@ async def get_loans(username: str) -> str:
             if r.status != 200:
                 return "*Error fetching loans**"
             loan_ids = await r.json()
+            
     except Exception:
         return "*Error fetching loans**"
 
@@ -56,6 +57,7 @@ async def get_loans(username: str) -> str:
                 ) as resp:
                     if resp.status == 200:
                         return await resp.json(content_type=None)
+                        
             except Exception:
                 return None
         return None
