@@ -159,7 +159,7 @@ async def check_posts():
             amount_match = RE_AMOUNT.search(title)
             selftext_l = post.selftext.lower()
             if (not amount_match
-                    or int(amount_match.group()) < 10
+                    or int(amount_match.group()) <= 10
                     or int(amount_match.group()) > 500
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
