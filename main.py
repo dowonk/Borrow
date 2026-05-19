@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands, tasks
 
 FORBIDDEN_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
-LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state"})
+LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state", "america"})
 PREARRANGED_WORDS = frozenset({"pre ", "pre-", "arrange"})
 PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"})
 
