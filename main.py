@@ -198,7 +198,7 @@ async def run_check(username: str):
         unique_list = set()
         usl_list = set()
         async for item in redditor.new(limit=1000):
-            if item.subreddit.display_name.lower() not in USL_SUBS:
+            if item.subreddit.display_name.lower() not in (USL_SUBS | FORBIDDEN_SUBS):
                 unique_list.add(item.subreddit.display_name)
             else:
                 usl_list.add(item.subreddit.display_name)
