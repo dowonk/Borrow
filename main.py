@@ -200,7 +200,7 @@ async def run_check(username: str):
         async for item in redditor.new(limit=1000):
             if item.lower() not in USL_SUBS:
                 unique_list.add(item.subreddit.display_name)
-            else
+            else:
                 usl_list.add(item.subreddit.display_name)
 
         subreddit_list = []
