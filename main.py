@@ -8,6 +8,7 @@ import webserver
 import discord
 from discord.ext import commands, tasks
 
+USL_SUBS = frozenset({"aftershocktickets", "airsoftmarket", "airsoftmarketcanada", "animalcrossingamiibos", "animedeals", "appleswap", "assistance", "avatartrading", "avexchange", "campfloggnawbuysell", "canadianhardwareswap", "canadianknifeswap", "caps", "care", "cash4cash", "charity", "coinsales", "comicswap", "digitalcodesell", "discexchange", "disneypinswap", "donedirtcheap", "edcexchange", "fightsticksforsale", "flashlight", "flyfishingexchange", "food_pantry", "fragranceswap", "funkoswap", "gamesale", "gameswap", "gametrade", "gear4sale", "geartrade", "giftcardexchange", "giftofgames", "gofundme", "hardwareswap", "hardwareswapuk", "hireagirlfriend", "hockeyjerseys", "homelabsales", "hutcoinsales", "igsrep", "indiegameswap", "itunesdeals", "jewelryforsale", "knife_swap", "labubuswap", "legomarket", "letstradepedals", "lolboosting", "machinedpens", "mangaswap", "mechmarket", "mediaswap", "miniswap", "mousemarket", "nba2kmtselling", "nbarep", "need", "overwatchboosting", "pen_swap", "periodpantry", "phoneverification", "photomarket", "pkmntcgtrades", "playingcardsmarket", "pmsforsale", "pokemongotrade", "random_acts_of_amazon", "random_acts_of_pizza", "randomactsofchristmas", "randomactsofpetfood", "randomactsoftacobell", "randomkindness", "referral", "referrals", "rpgtrade", "sgsflair", "shave_bazaar", "signupsforpay", "silverbugbets", "slavelabour", "snackexchange", "sneakermarket", "starcitizen_trades", "steamgameswap", "thinkpadsforsale", "ulgeartrade", "universalscammerlist", "uvtrade", "vinylcollectors", "watchexchange", "watchexchangecanada", "ygomarketplace"})
 FORBIDDEN_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
 LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state", "america"})
 PREARRANGED_WORDS = frozenset({"pre ", "pre-", "arrange"})
@@ -194,13 +195,17 @@ async def run_check(username: str):
         redditor = await REDDIT.redditor(username)
         await redditor.load()
 
-        unique_subs = set()
+        unique_list = set()
+        usl_list = set()
         async for item in redditor.new(limit=1000):
-            unique_subs.add(item.subreddit.display_name)
+            if item.lower() not in USL_SUBS:
+                unique_list.add(item.subreddit.display_name)
+            else
+                usl_list.add(item.subreddit.display_name)
 
         subreddit_list = []
         forbidden_list = []
-        for sub in sorted(unique_subs, key=str.lower):
+        for sub in sorted(unique_list, key=str.lower):
             if sub.lower() in FORBIDDEN_SUBS:
                 forbidden_list.append(sub)
             else:
@@ -214,6 +219,7 @@ async def run_check(username: str):
             f"**{username}**\n"
             f"{loans} | **Karma:** *{karma}* | **Age:** *{age}*\n\n"
             f"**Subreddits:**\n{', '.join(subreddit_list) if subreddit_list else 'None'}\n\n"
+            f"**USL Subreddits:**\n{', '.join(usl_list) if usl_list else 'None'}\n\n"
             f"**Forbidden Subreddits:**\n{', '.join(forbidden_list) if forbidden_list else 'None'}"
         )
 
