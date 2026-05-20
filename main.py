@@ -183,7 +183,7 @@ async def check_posts():
             )
 
             await MAIN_CHANNEL.send(message)
-            await run_check(post.author)
+            await run_check(post.author.name)
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
