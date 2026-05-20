@@ -203,7 +203,7 @@ async def check(ctx, username: str):
         subreddits = []
 
         async for item in redditor.new(limit=1000):
-			sub_name = item.subreddit.display_name.lower()
+            sub_name = item.subreddit.display_name.lower()
 
             if sub_name in USL_SUBS and sub_name not in usl_subreddits:
                 usl_subreddits.add(sub_name)
