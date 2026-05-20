@@ -183,7 +183,7 @@ async def check_posts():
             )
 
             await MAIN_CHANNEL.send(message)
-            asyncio.create_task(run_check(str(post.author)))
+            await run_check(post.author)
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
