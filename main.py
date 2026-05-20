@@ -193,10 +193,10 @@ async def check_posts():
 @bot.command()
 async def check(ctx, username: str):
     try:
+        loans_task = asyncio.create_task(get_loans(username))
+        
         redditor = await REDDIT.redditor(username)
         await redditor.load()
-
-        loans_task = asyncio.create_task(get_loans(username))
 
         usl_subreddits = set()
         forbidden_subreddits = set()
