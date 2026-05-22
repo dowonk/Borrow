@@ -144,7 +144,7 @@ async def get_user_posts(redditor):
         return None
 
 @tasks.loop(seconds=0.8)
-async def check_posts(ctx):
+async def check_posts():
     try:
         now = time.time()
         async for post in SUBREDDIT.new(limit=3):
@@ -186,7 +186,6 @@ async def check_posts(ctx):
             posts = await get_user_posts(post.author)
             
             await sent_message.edit(content=f"{message}{posts}")
-            await check(ctx, post.author.name)
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
