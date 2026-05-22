@@ -143,7 +143,7 @@ async def get_user_posts(redditor):
         print(f"Error in get_user_posts: {e}")
         return None
 
-@tasks.loop(seconds=0.7)
+@tasks.loop(seconds=0.8)
 async def check_posts():
     try:
         now = time.time()
