@@ -239,7 +239,8 @@ async def on_ready():
     connector = aiohttp.TCPConnector(
         limit=100,
         ttl_dns_cache=300,
-        enable_cleanup_closed=True
+        enable_cleanup_closed=True,
+        ssl=False
     )
     HTTP_SESSION = aiohttp.ClientSession(connector=connector)
 
