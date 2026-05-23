@@ -40,7 +40,8 @@ async def get_loans(username):
             base_url,
             params={"borrower_name": username, "limit": 10, "order": "id_desc"},
             headers=headers,
-            timeout=aiohttp.ClientTimeout(total=3)
+            timeout=aiohttp.ClientTimeout(total=3),
+            ssl=False
         ) as r:
             if r.status != 200:
                 return "Error fetching loans"
@@ -60,7 +61,8 @@ async def get_loans(username):
                 async with HTTP_SESSION.get(
                     f"{base_url}/{lid}",
                     headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=3)
+                    timeout=aiohttp.ClientTimeout(total=3),
+                    ssl=False
                 ) as resp:
                     if resp.status == 200:
                         return await resp.json(content_type=None)
@@ -240,7 +242,6 @@ async def on_ready():
         limit=100,
         ttl_dns_cache=300,
         enable_cleanup_closed=True,
-        ssl=False
     )
     HTTP_SESSION = aiohttp.ClientSession(connector=connector)
 
