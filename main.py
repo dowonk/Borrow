@@ -163,7 +163,10 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            user_info, user_posts = await asyncio.gather(user_info_task, user_posts_task)
+            user_info, user_posts = await asyncio.gather(
+                    get_user_info(post.author),
+                    get_user_posts(post.author)
+            )
 
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3:
@@ -177,12 +180,8 @@ async def check_posts():
             )
             
             sent_message = await MAIN_CHANNEL.send(message)
-            
-            user_info = await user_info_task
             sent_message = await sent_message.edit(content=f"{message}\n\n{user_info}")
-
-            user_posts = await user_posts_task
-            await sent_message.edit(content=f"{message}\n\n{user_posts}")
+            await sent_message.edit(content=f"{sent_message.content}\n\n{user_posts}")
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
