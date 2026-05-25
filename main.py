@@ -159,8 +159,9 @@ async def check_posts():
             if len(HISTORY_IDS) > 3:
                 HISTORY_IDS.pop(0)
 
-            selftext = post.selftext or "None"
+            user_info_task = asyncio.create_task(get_user_info(post.author))
 
+            selftext = post.selftext or "None"
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
@@ -168,7 +169,7 @@ async def check_posts():
             )
             
             sent_message = await MAIN_CHANNEL.send(message)
-            user_info = await get_user_info(post.author)
+            user_info = await user_info_task
             
             await sent_message.edit(content=f"{message}\n\n{user_info}")
 
