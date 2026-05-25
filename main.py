@@ -102,15 +102,8 @@ async def get_user_info(redditor):
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
-        user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
-        return user_info
+        user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}\n\n"
 
-    except Exception as e:
-        print(f"Error in get_user_info: {e}")
-        return None
-
-async def get_user_posts(redditor):
-    try:
         usl_list = set()
         forbidden_list = set()
         activity = []
@@ -127,18 +120,17 @@ async def get_user_posts(redditor):
             elif sub_name in FORBIDDEN_SUBS:
                 forbidden_list.add(sub_name)
 
-        subreddits = (
-            f"**USL Subreddits: **{', '.join(usl_list) if usl_list else 'None'}\n"
-            f"**Forbidden Subreddits: **{', '.join(forbidden_list) if forbidden_list else 'None'}\n\n"
-        )
+        subreddits = f"**USL Subreddits: **{', '.join(usl_list) if usl_list else 'None'}\n**Forbidden Subreddits: **{', '.join(forbidden_list) if forbidden_list else 'None'}\n\n"
 
         if not activity:
-            return subreddits + "Hidden profile"
+            user_info = user_info + subreddits + "Hidden profile"
+        else:
+            user_info = user_info + subreddits + "\n".join(activity[:5])
 
-        return subreddits + "\n".join(activity[:5])
+        return user_info
 
     except Exception as e:
-        print(f"Error in get_user_posts: {e}")
+        print(f"Error in get_user_combined_info: {e}")
         return None
 
 @tasks.loop(seconds=0.8)
@@ -177,9 +169,8 @@ async def check_posts():
             
             sent_message = await MAIN_CHANNEL.send(message)
             user_info = await get_user_info(post.author)
-            user_posts = await get_user_posts(post.author)
             
-            await sent_message.edit(content=f"{message}\n\n{user_info}\n\n{user_posts}")
+            await sent_message.edit(content=f"{message}\n\n{user_info}")
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
