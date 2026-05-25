@@ -53,22 +53,18 @@ async def get_loans(username):
     if not loan_ids:
         return "**Total:** $0 | **Open:** $0"
 
-    sem = asyncio.Semaphore(50)
-
     async def fetch_loan(lid):
-        async with sem:
-            try:
-                async with HTTP_SESSION.get(
-                    f"{base_url}/{lid}",
-                    headers=headers,
-                    timeout=aiohttp.ClientTimeout(total=3),
-                    ssl=False
-                ) as resp:
-                    if resp.status == 200:
-                        return await resp.json(content_type=None)
-            except Exception:
-                return None
-        return None
+        try:
+            async with HTTP_SESSION.get(
+                f"{base_url}/{lid}",
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=3),
+                ssl=False
+            ) as resp:
+                if resp.status == 200:
+                    return await resp.json(content_type=None)
+        except Exception:
+            return None
 
     loans_data = await asyncio.gather(*(fetch_loan(lid) for lid in loan_ids))
 
@@ -106,7 +102,7 @@ async def get_user_info(redditor):
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
-        user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}\n\n"
+        user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
         return user_info
 
     except Exception as e:
@@ -131,15 +127,15 @@ async def get_user_posts(redditor):
             elif sub_name in FORBIDDEN_SUBS:
                 forbidden_list.add(sub_name)
 
-        report_posts = (
+        subreddits = (
             f"**USL Subreddits: **{', '.join(usl_list) if usl_list else 'None'}\n"
             f"**Forbidden Subreddits: **{', '.join(forbidden_list) if forbidden_list else 'None'}\n\n"
         )
 
         if not activity:
-            return report_posts + "Hidden profile"
+            return subreddits + "Hidden profile"
 
-        return report_posts + "\n".join(activity[:5])
+        return subreddits + "\n".join(activity[:5])
 
     except Exception as e:
         print(f"Error in get_user_posts: {e}")
@@ -167,10 +163,6 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            user_info = await get_user_info(post.author)
-            if user_info is None:
-                continue
-
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3:
                 HISTORY_IDS.pop(0)
@@ -180,14 +172,14 @@ async def check_posts():
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
-                f"*{selftext[:500]}*\n\n"
-                f"{user_info}"
+                f"*{selftext[:500]}*"
             )
             
             sent_message = await MAIN_CHANNEL.send(message)
-            posts = await get_user_posts(post.author)
+            user_info = await get_user_info(post.author)
+            user_posts = await get_user_posts(post.author)
             
-            await sent_message.edit(content=f"{message}{posts}")
+            await sent_message.edit(content=f"{message}\n\n{user_info}\n\n{user_posts}")
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
