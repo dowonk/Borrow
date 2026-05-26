@@ -103,6 +103,7 @@ async def get_user_info(redditor):
         )
 
         user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
+        
         return user_info
 
     except Exception as e:
@@ -163,7 +164,6 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            user_info_task = asyncio.create_task(get_user_info(post.author))
             user_posts_task = asyncio.create_task(get_user_posts(post.author))
 
             HISTORY_IDS.append(post.id)
@@ -179,7 +179,7 @@ async def check_posts():
             
             sent_message = await MAIN_CHANNEL.send(message)
             
-            user_info = await user_info_task
+            user_info = await get_user_info(post.author)
             sent_message = await sent_message.edit(content=f"{message}\n\n{user_info}")
             
             user_posts = await user_posts_task
