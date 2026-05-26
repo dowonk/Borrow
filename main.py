@@ -32,10 +32,10 @@ def format_time_ago(timestamp):
     return "0s"
 
 async def get_loans(username):
-    headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
-    base_url = "https://redditloans.com/api/loans"
-
     try:
+        headers = {"User-Agent": "Discord-Borrow-Bot-v1"}
+        base_url = "https://redditloans.com/api/loans"
+    
         async with HTTP_SESSION.get(
             base_url,
             params={"borrower_name": username, "limit": 10, "order": "id_desc"},
@@ -43,18 +43,13 @@ async def get_loans(username):
             timeout=aiohttp.ClientTimeout(total=3),
             ssl=False
         ) as r:
-            if r.status != 200:
-                return "Error fetching loans"
             loan_ids = await r.json()
-
-    except Exception:
-        return "Error fetching loans"
-
-    if not loan_ids:
-        return "**Total:** $0 | **Open:** $0"
-
-    async def fetch_loan(lid):
-        try:
+    
+    
+        if not loan_ids:
+            return "**Total:** $0 | **Open:** $0"
+    
+        async def fetch_loan(lid):
             async with HTTP_SESSION.get(
                 f"{base_url}/{lid}",
                 headers=headers,
@@ -63,27 +58,28 @@ async def get_loans(username):
             ) as resp:
                 if resp.status == 200:
                     return await resp.json(content_type=None)
-        except Exception:
-            return None
+    
+        loans_data = await asyncio.gather(*(fetch_loan(lid) for lid in loan_ids))
+    
+        total = 0
+        open_loans = []
+    
+        for loan in loans_data:
+            principal = loan.get("principal_minor") or 0
+            total += principal
+    
+            if not (
+                loan.get("repaid_at")
+                or loan.get("unpaid_at")
+                or loan.get("deleted_at")
+            ):
+                open_loans.append(f"${principal / 100:.0f}")
+    
+        open_str = " ".join(open_loans) if open_loans else "$0"
+        return f"**Total:** ${total / 100:.0f} | **Open:** {open_str}"
 
-    loans_data = await asyncio.gather(*(fetch_loan(lid) for lid in loan_ids))
-
-    total = 0
-    open_loans = []
-
-    for loan in loans_data:
-        principal = loan.get("principal_minor") or 0
-        total += principal
-
-        if not (
-            loan.get("repaid_at")
-            or loan.get("unpaid_at")
-            or loan.get("deleted_at")
-        ):
-            open_loans.append(f"${principal / 100:.0f}")
-
-    open_str = " ".join(open_loans) if open_loans else "$0"
-    return f"**Total:** ${total / 100:.0f} | **Open:** {open_str}"
+    except Exception as e:
+        print(f"Error in get_loans: {e}")
 
 async def get_user_info(redditor):
     try:
@@ -108,7 +104,6 @@ async def get_user_info(redditor):
 
     except Exception as e:
         print(f"Error in get_user_info: {e}")
-        return None
 
 async def get_user_posts(redditor):
     try:
@@ -140,7 +135,6 @@ async def get_user_posts(redditor):
 
     except Exception as e:
         print(f"Error in get_user_posts: {e}")
-        return None
 
 @tasks.loop(seconds=0.8)
 async def check_posts():
