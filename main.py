@@ -16,7 +16,7 @@ PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"}
 
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 
-HISTORY_IDS = []
+HISTORY_IDS = deque()
 
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
@@ -164,11 +164,9 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            user_posts_task = asyncio.create_task(get_user_posts(post.author))
-
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3:
-                HISTORY_IDS.pop(0)
+                HISTORY_IDS.popleft()
 
             selftext = post.selftext or "None"
             message = (
@@ -182,7 +180,7 @@ async def check_posts():
             user_info = await get_user_info(post.author)
             sent_message = await sent_message.edit(content=f"{message}\n\n{user_info}")
             
-            user_posts = await user_posts_task
+            user_posts = await get_user_posts(post.author)
             await sent_message.edit(content=f"{sent_message.content}\n\n{user_posts}")
 
     except Exception as e:
@@ -252,9 +250,10 @@ async def on_ready():
     CHECK_CHANNEL = bot.get_channel(1490949539367227432)
 
     async for m in MAIN_CHANNEL.history(limit=3):
-        match = RE_HISTORY.search(m.content.lower())
-        if match and m.author == bot.user:
-            HISTORY_IDS.insert(0, match.group(1))
+        if m.author == bot.user:
+            match = RE_HISTORY.search(m.content.lower())
+            if match:
+                HISTORY_IDS.appendleft(match.group(1))
 
     await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
