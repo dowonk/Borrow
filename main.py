@@ -16,7 +16,7 @@ PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"}
 
 INTERVALS = (('Y', 31536000), ('MO', 2592000), ('D', 86400), ('H', 3600), ('M', 60), ('S', 1))
 
-HISTORY_IDS = deque()
+HISTORY_IDS = []
 
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
@@ -166,7 +166,7 @@ async def check_posts():
 
             HISTORY_IDS.append(post.id)
             if len(HISTORY_IDS) > 3:
-                HISTORY_IDS.popleft()
+                HISTORY_IDS.pop(0)
 
             selftext = post.selftext or "None"
             message = (
@@ -253,7 +253,7 @@ async def on_ready():
         if m.author == bot.user:
             match = RE_HISTORY.search(m.content.lower())
             if match:
-                HISTORY_IDS.appendleft(match.group(1))
+                HISTORY_IDS.insert(0, match.group(1))
 
     await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
