@@ -107,37 +107,37 @@ async def get_user_info(redditor):
 
 async def get_user_posts(redditor):
     try:
-		activity = []
-		usl_dict = {}
-		forbidden_dict = {}
+        activity = []
+        usl_dict = {}
+        forbidden_dict = {}
 
-		permalink = "https://www.reddit.com"
+        permalink = "https://www.reddit.com"
 
-		async for item in redditor.new(limit=1000):
-			sub_name = item.subreddit.display_name.lower()
+        async for item in redditor.new(limit=1000):
+            sub_name = item.subreddit.display_name.lower()
 
-			if sub_name != "borrow" and len(activity) < 5:
-				text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
-				activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
+            if sub_name != "borrow" and len(activity) < 5:
+                text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
+                activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
 
-			if sub_name in USL_SUBS and sub_name not in usl_dict:
-				usl_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
-	
-			elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_dict:
-				forbidden_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
+            if sub_name in USL_SUBS and sub_name not in usl_dict:
+                usl_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
+    
+            elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_dict:
+                forbidden_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
 
-		if not activity:
-			return "Hidden profile"
-	
-		subreddits = (
-			f"**USL Subreddits: **{', '.join(usl_dict.values()) if usl_dict else 'None'}\n"
-			f"**Forbidden Subreddits: **{', '.join(forbidden_dict.values()) if forbidden_dict else 'None'}\n\n"
-			)
+        if not activity:
+            return "Hidden profile"
+    
+        subreddits = (
+            f"**USL Subreddits: **{', '.join(usl_dict.values()) if usl_dict else 'None'}\n"
+            f"**Forbidden Subreddits: **{', '.join(forbidden_dict.values()) if forbidden_dict else 'None'}\n\n"
+        )
 
-		return subreddits + "\n".join(activity[:5])
+        return subreddits + "\n".join(activity[:5])
 
-	except Exception as e:
-		print(f"Error in get_user_posts: {e}")
+    except Exception as e:
+        print(f"Error in get_user_posts: {e}")
 
 @tasks.loop(seconds=0.8)
 async def check_posts():
