@@ -96,7 +96,7 @@ async def get_user_info(redditor):
             f"**[Loans](<https://redditloans.com/loans.html?username={redditor.name}>) -** "
             f"**[Posts](<https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>) -** "
             f"**[Search](<https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>) -** "
-            f"**[COMMERCE](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
+            f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
         user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
@@ -131,7 +131,7 @@ async def get_user_posts(redditor):
             return "Hidden profile"
     
         subreddits = (
-            f"**COMMERCE: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
+            f"**Commerce: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
             f"**Lending: **{', '.join(lending_dict.values()) if lending_dict else '-----'}\n\n"
         )
 
@@ -214,7 +214,7 @@ async def check(ctx, username: str):
             f"**{username}**\n"
             f"{loans} | **Karma:** {karma} | **Age:** {age}\n\n"
             f"**Subreddits:**\n{', '.join(subreddits) if subreddits else '-----'}\n\n"
-            f"**COMMERCE Subreddits:**\n{', '.join(commerce_subreddits) if commerce_subreddits else '-----'}\n\n"
+            f"**Commerce Subreddits:**\n{', '.join(commerce_subreddits) if commerce_subreddits else '-----'}\n\n"
             f"**Lending Subreddits:**\n{', '.join(lending_subreddits) if lending_subreddits else '-----'}"
         )
 
