@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands, tasks
 
 COMMERCE_SUBS = frozenset({"aftershocktickets", "airsoftmarket", "airsoftmarketcanada", "animalcrossingamiibos", "animedeals", "appleswap", "assistance", "avatartrading", "avexchange", "campfloggnawbuysell", "canadianhardwareswap", "canadianknifeswap", "caps", "care", "cash4cash", "charity", "coinsales", "comicswap", "digitalcodesell", "discexchange", "disneypinswap", "donedirtcheap", "edcexchange", "fightsticksforsale", "flashlight", "flyfishingexchange", "food_pantry", "fragranceswap", "funkoswap", "gamesale", "gameswap", "gametrade", "gear4sale", "geartrade", "giftcardexchange", "giftofgames", "gofundme", "hardwareswap", "hardwareswapuk", "hireagirlfriend", "hockeyjerseys", "homelabsales", "hutcoinsales", "igsrep", "indiegameswap", "itunesdeals", "jewelryforsale", "knife_swap", "labubuswap", "legomarket", "letstradepedals", "lolboosting", "machinedpens", "mangaswap", "mechmarket", "mediaswap", "miniswap", "mousemarket", "nba2kmtselling", "nbarep", "need", "overwatchboosting", "pen_swap", "periodpantry", "phoneverification", "photomarket", "pkmntcgtrades", "playingcardsmarket", "pmsforsale", "pokemongotrade", "random_acts_of_amazon", "random_acts_of_pizza", "randomactsofchristmas", "randomactsofpetfood", "randomactsoftacobell", "randomkindness", "referral", "referrals", "rpgtrade", "sgsflair", "shave_bazaar", "signupsforpay", "silverbugbets", "slavelabour", "snackexchange", "sneakermarket", "starcitizen_trades", "steamgameswap", "thinkpadsforsale", "ulgeartrade", "universalscammerlist", "uvtrade", "vinylcollectors", "watchexchange", "watchexchangecanada", "ygomarketplace"})
-LOANING_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
+LENDING_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
 LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state", "america"})
 PREARRANGED_WORDS = frozenset({"(pre", "pre ", "pre-", "arrange"})
 PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"})
@@ -110,7 +110,7 @@ async def get_user_posts(redditor):
     try:
         activity = []
         commerce_dict = {}
-        loaning_dict = {}
+        lending_dict = {}
 
         permalink = "https://www.reddit.com"
 
@@ -124,15 +124,15 @@ async def get_user_posts(redditor):
             if sub_name in COMMERCE_SUBS and sub_name not in commerce_dict:
                 commerce_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
-            elif sub_name in LOANING_SUBS and sub_name not in loaning_dict:
-                loaning_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
+            elif sub_name in LENDING_SUBS and sub_name not in lending_dict:
+                lending_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
 
         if not activity:
             return "Hidden profile"
     
         subreddits = (
-            f"**COMMERCE Subreddits: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
-            f"**Loaning Subreddits: **{', '.join(loaning_dict.values()) if loaning_dict else '-----'}\n\n"
+            f"**COMMERCE: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
+            f"**Lending: **{', '.join(lending_dict.values()) if lending_dict else '-----'}\n\n"
         )
 
         return subreddits + "\n".join(activity[:5])
@@ -191,7 +191,7 @@ async def check(ctx, username: str):
         await redditor.load()
 
         commerce_subreddits = set()
-        loaning_subreddits = set()
+        lending_subreddits = set()
         subreddits = []
 
         async for item in redditor.new(limit=1000):
@@ -199,9 +199,9 @@ async def check(ctx, username: str):
 
             if sub_name in COMMERCE_SUBS and sub_name not in commerce_subreddits:
                 commerce_subreddits.add(sub_name)
-            elif sub_name in LOANING_SUBS and sub_name not in loaning_subreddits:
-                loaning_subreddits.add(sub_name)
-            elif sub_name not in subreddits and sub_name not in (commerce_subreddits | loaning_subreddits):
+            elif sub_name in LENDING_SUBS and sub_name not in lending_subreddits:
+                lending_subreddits.add(sub_name)
+            elif sub_name not in subreddits and sub_name not in (commerce_subreddits | lending_subreddits):
                 subreddits.append(sub_name)
 
         subreddits = sorted(subreddits)
@@ -215,7 +215,7 @@ async def check(ctx, username: str):
             f"{loans} | **Karma:** {karma} | **Age:** {age}\n\n"
             f"**Subreddits:**\n{', '.join(subreddits) if subreddits else '-----'}\n\n"
             f"**COMMERCE Subreddits:**\n{', '.join(commerce_subreddits) if commerce_subreddits else '-----'}\n\n"
-            f"**Loaning Subreddits:**\n{', '.join(loaning_subreddits) if loaning_subreddits else '-----'}"
+            f"**Lending Subreddits:**\n{', '.join(lending_subreddits) if lending_subreddits else '-----'}"
         )
 
         for i in range(0, len(report), 2000):
