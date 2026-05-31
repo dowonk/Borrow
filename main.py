@@ -107,9 +107,13 @@ async def get_user_info(redditor):
 
 async def get_user_posts(redditor):
     try:
-        usl_list = set()
-        forbidden_list = set()
+        usl_list = []
+        forbidden_list = []
+        usl_dict = {}
+        forbidden_dict = {}
         activity = []
+
+        permalink = "https://reddit.com"
 
         async for item in redditor.new(limit=1000):
             sub_name = item.subreddit.display_name.lower()
@@ -118,10 +122,13 @@ async def get_user_posts(redditor):
                 text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
                 activity.append(f"[{format_time_ago(item.created_utc)}] **r/{item.subreddit.display_name}** *{text}*")
 
-            if sub_name in USL_SUBS:
-                usl_list.add(sub_name)
-            elif sub_name in FORBIDDEN_SUBS:
-                forbidden_list.add(sub_name)
+            if sub_name in USL_SUBS and sub_name not in usl_dict:
+                usl_dict[sub_name] = permalink + item.permalink
+            elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_dict:
+                forbidden_dict[sub_name] = permalink + item.permalink
+
+        usl_list = [f"[{element}]({usl_dict[element]})" for element in usl_dict]
+        forbidden_list = [f"[{element}]({forbidden_dict[element]})" for element in forbidden_dict]
 
         subreddits = (
             f"**USL Subreddits: **{', '.join(usl_list) if usl_list else 'None'}\n"
