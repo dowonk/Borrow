@@ -121,10 +121,10 @@ async def get_user_posts(redditor):
                 activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
 
             if sub_name in USL_SUBS and sub_name not in usl_dict:
-                usl_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
+                usl_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
             elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_dict:
-                forbidden_dict[sub_name] = f"[{sub_name}]({permalink}{item.permalink})"
+                forbidden_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
 
         if not activity:
             return "Hidden profile"
