@@ -8,8 +8,8 @@ import webserver
 import discord
 from discord.ext import commands, tasks
 
-USL_SUBS = frozenset({"aftershocktickets", "airsoftmarket", "airsoftmarketcanada", "animalcrossingamiibos", "animedeals", "appleswap", "assistance", "avatartrading", "avexchange", "campfloggnawbuysell", "canadianhardwareswap", "canadianknifeswap", "caps", "care", "cash4cash", "charity", "coinsales", "comicswap", "digitalcodesell", "discexchange", "disneypinswap", "donedirtcheap", "edcexchange", "fightsticksforsale", "flashlight", "flyfishingexchange", "food_pantry", "fragranceswap", "funkoswap", "gamesale", "gameswap", "gametrade", "gear4sale", "geartrade", "giftcardexchange", "giftofgames", "gofundme", "hardwareswap", "hardwareswapuk", "hireagirlfriend", "hockeyjerseys", "homelabsales", "hutcoinsales", "igsrep", "indiegameswap", "itunesdeals", "jewelryforsale", "knife_swap", "labubuswap", "legomarket", "letstradepedals", "lolboosting", "machinedpens", "mangaswap", "mechmarket", "mediaswap", "miniswap", "mousemarket", "nba2kmtselling", "nbarep", "need", "overwatchboosting", "pen_swap", "periodpantry", "phoneverification", "photomarket", "pkmntcgtrades", "playingcardsmarket", "pmsforsale", "pokemongotrade", "random_acts_of_amazon", "random_acts_of_pizza", "randomactsofchristmas", "randomactsofpetfood", "randomactsoftacobell", "randomkindness", "referral", "referrals", "rpgtrade", "sgsflair", "shave_bazaar", "signupsforpay", "silverbugbets", "slavelabour", "snackexchange", "sneakermarket", "starcitizen_trades", "steamgameswap", "thinkpadsforsale", "ulgeartrade", "universalscammerlist", "uvtrade", "vinylcollectors", "watchexchange", "watchexchangecanada", "ygomarketplace"})
-FORBIDDEN_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
+COMMERCE_SUBS = frozenset({"aftershocktickets", "airsoftmarket", "airsoftmarketcanada", "animalcrossingamiibos", "animedeals", "appleswap", "assistance", "avatartrading", "avexchange", "campfloggnawbuysell", "canadianhardwareswap", "canadianknifeswap", "caps", "care", "cash4cash", "charity", "coinsales", "comicswap", "digitalcodesell", "discexchange", "disneypinswap", "donedirtcheap", "edcexchange", "fightsticksforsale", "flashlight", "flyfishingexchange", "food_pantry", "fragranceswap", "funkoswap", "gamesale", "gameswap", "gametrade", "gear4sale", "geartrade", "giftcardexchange", "giftofgames", "gofundme", "hardwareswap", "hardwareswapuk", "hireagirlfriend", "hockeyjerseys", "homelabsales", "hutcoinsales", "igsrep", "indiegameswap", "itunesdeals", "jewelryforsale", "knife_swap", "labubuswap", "legomarket", "letstradepedals", "lolboosting", "machinedpens", "mangaswap", "mechmarket", "mediaswap", "miniswap", "mousemarket", "nba2kmtselling", "nbarep", "need", "overwatchboosting", "pen_swap", "periodpantry", "phoneverification", "photomarket", "pkmntcgtrades", "playingcardsmarket", "pmsforsale", "pokemongotrade", "random_acts_of_amazon", "random_acts_of_pizza", "randomactsofchristmas", "randomactsofpetfood", "randomactsoftacobell", "randomkindness", "referral", "referrals", "rpgtrade", "sgsflair", "shave_bazaar", "signupsforpay", "silverbugbets", "slavelabour", "snackexchange", "sneakermarket", "starcitizen_trades", "steamgameswap", "thinkpadsforsale", "ulgeartrade", "universalscammerlist", "uvtrade", "vinylcollectors", "watchexchange", "watchexchangecanada", "ygomarketplace"})
+LOANING_SUBS = frozenset({"borrownew", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
 LOCATIONS = frozenset({"usa", "u.s.a", "u.s.a.", "u.s.", "u.s", " us)", ",us)", "state", "america"})
 PREARRANGED_WORDS = frozenset({"(pre", "pre ", "pre-", "arrange"})
 PREARRANGED_SELFTEXT = frozenset({"pre arranged", "prearranged", "pre-arranged"})
@@ -80,6 +80,7 @@ async def get_loans(username):
 
     except Exception as e:
         print(f"Error in get_loans: {e}")
+        return "-----"
 
 async def get_user_info(redditor):
     try:
@@ -95,7 +96,7 @@ async def get_user_info(redditor):
             f"**[Loans](<https://redditloans.com/loans.html?username={redditor.name}>) -** "
             f"**[Posts](<https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>) -** "
             f"**[Search](<https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>) -** "
-            f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
+            f"**[COMMERCE](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
         user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
@@ -108,8 +109,8 @@ async def get_user_info(redditor):
 async def get_user_posts(redditor):
     try:
         activity = []
-        usl_dict = {}
-        forbidden_dict = {}
+        commerce_dict = {}
+        loaning_dict = {}
 
         permalink = "https://www.reddit.com"
 
@@ -120,18 +121,18 @@ async def get_user_posts(redditor):
                 text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
                 activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
 
-            if sub_name in USL_SUBS and sub_name not in usl_dict:
-                usl_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
+            if sub_name in COMMERCE_SUBS and sub_name not in commerce_dict:
+                commerce_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
-            elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_dict:
-                forbidden_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
+            elif sub_name in LOANING_SUBS and sub_name not in loaning_dict:
+                loaning_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
 
         if not activity:
             return "Hidden profile"
     
         subreddits = (
-            f"**USL Subreddits: **{', '.join(usl_dict.values()) if usl_dict else 'None'}\n"
-            f"**Forbidden Subreddits: **{', '.join(forbidden_dict.values()) if forbidden_dict else 'None'}\n\n"
+            f"**COMMERCE Subreddits: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
+            f"**Loaning Subreddits: **{', '.join(loaning_dict.values()) if loaning_dict else '-----'}\n\n"
         )
 
         return subreddits + "\n".join(activity[:5])
@@ -164,7 +165,7 @@ async def check_posts():
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
-                f"*{post.selftext[:500] or 'None'}*"
+                f"*{post.selftext[:500] or '-----'}*"
             )
             sent_message = await MAIN_CHANNEL.send(message)
             
@@ -189,18 +190,18 @@ async def check(ctx, username: str):
         redditor = await REDDIT.redditor(username)
         await redditor.load()
 
-        usl_subreddits = set()
-        forbidden_subreddits = set()
+        commerce_subreddits = set()
+        loaning_subreddits = set()
         subreddits = []
 
         async for item in redditor.new(limit=1000):
             sub_name = item.subreddit.display_name.lower()
 
-            if sub_name in USL_SUBS and sub_name not in usl_subreddits:
-                usl_subreddits.add(sub_name)
-            elif sub_name in FORBIDDEN_SUBS and sub_name not in forbidden_subreddits:
-                forbidden_subreddits.add(sub_name)
-            elif sub_name not in subreddits and sub_name not in (usl_subreddits | forbidden_subreddits):
+            if sub_name in COMMERCE_SUBS and sub_name not in commerce_subreddits:
+                commerce_subreddits.add(sub_name)
+            elif sub_name in LOANING_SUBS and sub_name not in loaning_subreddits:
+                loaning_subreddits.add(sub_name)
+            elif sub_name not in subreddits and sub_name not in (commerce_subreddits | loaning_subreddits):
                 subreddits.append(sub_name)
 
         subreddits = sorted(subreddits)
@@ -212,9 +213,9 @@ async def check(ctx, username: str):
         report = (
             f"**{username}**\n"
             f"{loans} | **Karma:** {karma} | **Age:** {age}\n\n"
-            f"**Subreddits:**\n{', '.join(subreddits) if subreddits else 'None'}\n\n"
-            f"**USL Subreddits:**\n{', '.join(usl_subreddits) if usl_subreddits else 'None'}\n\n"
-            f"**Forbidden Subreddits:**\n{', '.join(forbidden_subreddits) if forbidden_subreddits else 'None'}"
+            f"**Subreddits:**\n{', '.join(subreddits) if subreddits else '-----'}\n\n"
+            f"**COMMERCE Subreddits:**\n{', '.join(commerce_subreddits) if commerce_subreddits else '-----'}\n\n"
+            f"**Loaning Subreddits:**\n{', '.join(loaning_subreddits) if loaning_subreddits else '-----'}"
         )
 
         for i in range(0, len(report), 2000):
