@@ -168,16 +168,16 @@ async def check_posts():
                 f"*{post.selftext[:500] or '-----'}*"
             )
             sent_message = await MAIN_CHANNEL.send(message)
+
+            HISTORY_IDS.append(post.id)
+            if len(HISTORY_IDS) > 3:
+                HISTORY_IDS.pop(0)
             
             user_info = await get_user_info(post.author)
             sent_message = await sent_message.edit(content=f"{message}\n\n{user_info}")
             
             user_posts = await get_user_posts(post.author)
             await sent_message.edit(content=f"{sent_message.content}\n\n{user_posts}")
-
-            HISTORY_IDS.append(post.id)
-            if len(HISTORY_IDS) > 3:
-                HISTORY_IDS.pop(0)
 
     except Exception as e:
         print(f"Error in check_posts: {e}")
