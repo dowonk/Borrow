@@ -131,8 +131,8 @@ async def get_user_posts(redditor):
             return "Hidden profile"
     
         subreddits = (
-            f"**Commerce: **{', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
-            f"**Lending: **{', '.join(lending_dict.values()) if lending_dict else '-----'}\n\n"
+            f"**Commerce:** {', '.join(commerce_dict.values()) if commerce_dict else '-----'}\n"
+            f"**Lending:** {', '.join(lending_dict.values()) if lending_dict else '-----'}\n\n"
         )
 
         return subreddits + "\n".join(activity[:5])
