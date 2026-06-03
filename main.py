@@ -94,7 +94,7 @@ async def get_user_info(redditor):
             f"**[Message](<https://www.reddit.com/chat/user/t2_{redditor.id}>) -** "
             f"**[Profile](<https://www.reddit.com/user/{redditor.name}>) -** "
             f"**[Loans](<https://redditloans.com/loans.html?username={redditor.name}>) -** "
-            f"**[Posts](<https://www.reddit.com/r/borrow/search?q=author%3A{redditor.name}&include_over_18=on&sort=new&t=all>) -** "
+            f"**[Posts](<https://arctic-shift.photon-reddit.com/search?fun=posts_search&author={redditor.name}&limit=100&sort=desc>) -** "
             f"**[Search](<https://www.reddit.com/r/borrow/search/?q={redditor.name}&include_over_18=on&t=all&sort=relevance>) -** "
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
