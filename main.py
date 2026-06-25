@@ -164,7 +164,7 @@ async def check_posts():
             message = (
                 f"<@314300380051668994> [{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
-                f"*{post.selftext[:500] or '-----'}*"
+                f"*{post.selftext[:300] or '-----'}*"
             )
             sent_message = await MAIN_CHANNEL.send(message)
 
