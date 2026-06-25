@@ -123,7 +123,7 @@ async def get_user_posts(redditor):
             if sub_name in COMMERCE_SUBS and len(commerce_dict) < 3 and sub_name not in commerce_dict:
                 commerce_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
-            elif sub_name in LENDING_SUBS and len(lending_dict) == 0 and sub_name not in lending_dict:
+            elif sub_name in LENDING_SUBS and not lending_dict and sub_name not in lending_dict:
                 lending_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
 
         if not activity:
