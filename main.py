@@ -87,7 +87,6 @@ async def get_user_info(redditor):
         await redditor.load()
         
         loans = await get_loans(redditor.name)
-        karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
 
         links = (
@@ -99,7 +98,7 @@ async def get_user_info(redditor):
             f"**[USL](<https://www.universalscammerlist.com/?username={redditor.name}>)**"
         )
 
-        user_info = f"**{redditor.name}**\n{loans} | **Karma:** {karma} | **Age:** {age}\n{links}"
+        user_info = f"**{redditor.name}**\n{loans} | **Age:** {age}\n{links}"
         
         return user_info
 
@@ -121,10 +120,10 @@ async def get_user_posts(redditor):
                 text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
                 activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
 
-            if sub_name in COMMERCE_SUBS and sub_name not in commerce_dict:
+            if sub_name in COMMERCE_SUBS and len(commerce_dict) < 3 and sub_name not in commerce_dict:
                 commerce_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
-            elif sub_name in LENDING_SUBS and sub_name not in lending_dict:
+            elif sub_name in LENDING_SUBS and len(lending_dict) == 0 and sub_name not in lending_dict:
                 lending_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
 
         if not activity:
@@ -207,12 +206,11 @@ async def check(ctx, username: str):
         subreddits = sorted(subreddits)
 
         loans = await loans_task
-        karma = redditor.link_karma + redditor.comment_karma
         age = format_time_ago(redditor.created_utc)
 
         report = (
             f"**{username}**\n"
-            f"{loans} | **Karma:** {karma} | **Age:** {age}\n\n"
+            f"{loans} | **Age:** {age}\n\n"
             f"**Subreddits:**\n{', '.join(subreddits) if subreddits else '-----'}\n\n"
             f"**Commerce Subreddits:**\n{', '.join(commerce_subreddits) if commerce_subreddits else '-----'}\n\n"
             f"**Lending Subreddits:**\n{', '.join(lending_subreddits) if lending_subreddits else '-----'}"
