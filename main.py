@@ -120,7 +120,7 @@ async def get_user_posts(redditor):
                 text = (getattr(item, "title", None) or getattr(item, "body", "")).replace("\n", " ")[:100]
                 activity.append(f"[{format_time_ago(item.created_utc)}] **{item.subreddit.display_name}** *{text}*")
 
-            if sub_name in COMMERCE_SUBS and len(commerce_dict) < 3 and sub_name not in commerce_dict:
+            if sub_name in COMMERCE_SUBS and len(commerce_dict) < 2 and sub_name not in commerce_dict:
                 commerce_dict[sub_name] = f"**[{sub_name}](<{permalink}{item.permalink}>)**"
     
             elif sub_name in LENDING_SUBS and not lending_dict and sub_name not in lending_dict:
@@ -143,7 +143,7 @@ async def get_user_posts(redditor):
 async def check_posts():
     try:
         now = time.time()
-        async for post in SUBREDDIT.new(limit=3):
+        async for post in SUBREDDIT.new(limit=2):
             if post.id in HISTORY_IDS or post.created_utc < now - 3600:
                 continue
 
@@ -243,7 +243,7 @@ async def on_ready():
     MAIN_CHANNEL = bot.get_channel(1488789667313614930)
     CHECK_CHANNEL = bot.get_channel(1490949539367227432)
 
-    async for m in MAIN_CHANNEL.history(limit=3):
+    async for m in MAIN_CHANNEL.history(limit=2):
         if m.author == bot.user:
             match = RE_HISTORY.search(m.content.lower())
             if match:
