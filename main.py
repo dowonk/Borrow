@@ -157,7 +157,7 @@ async def check_posts():
             selftext_l = post.selftext.lower()
             if (not amount 
                     or amount <= 10
-                    or amount > 500
+                    or amount > 1000
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
