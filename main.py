@@ -4,7 +4,6 @@ import time
 import asyncio
 import aiohttp
 import asyncpraw
-import webserver
 import discord
 from discord.ext import commands, tasks
 
@@ -252,5 +251,4 @@ async def on_ready():
     await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
 
-webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
