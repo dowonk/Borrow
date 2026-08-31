@@ -138,7 +138,7 @@ async def get_user_posts(redditor):
     except Exception as e:
         print(f"Error in get_user_posts: {e}")
 
-@tasks.loop(seconds=0.8)
+@tasks.loop(seconds=0.7)
 async def check_posts():
     try:
         now = time.time()
@@ -160,8 +160,11 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
+            utc_hour = (int(post.created_utc) % 86400) // 3600
+            user_mention = "" if (8 <= utc_hour < 13) else "<@314300380051668994>"
+
             message = (
-                f"<@314300380051668994> [{post.id}]\n"
+                f"{user_mention}[{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
                 f"*{post.selftext[:200] or '-----'}*"
             )
