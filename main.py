@@ -161,7 +161,12 @@ async def check_posts():
                 continue
 
             utc_hour = (int(post.created_utc) % 86400) // 3600
-            user_mention = "" if (8 <= utc_hour < 13) else "<@314300380051668994>"
+            if 8 <= utc_hour < 13:
+                user_mention = ""
+                check_posts.change_interval(seconds=60)
+            else:
+                user_mention = "<@314300380051668994>"
+                if check_posts.seconds == 60: check_posts.change_interval(seconds=.7)
 
             message = (
                 f"{user_mention}[{post.id}]\n"
