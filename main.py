@@ -161,8 +161,8 @@ async def check_posts():
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
 
-            utc_hour = (int(post.created_utc) % 86400) // 3600
-            if 8 <= utc_hour < 13:
+            utc_hour = int(post.created_utc) % 86400
+            if 30600 < utc_hour < 50400:
                 user_mention = ""
                 check_posts.change_interval(seconds=60)
             else:
