@@ -162,7 +162,7 @@ async def check_posts():
                 continue
 
             utc_hour = int(post.created_utc) % 86400
-            if 30600 < utc_hour < 50400:
+            if 27000 < utc_hour < 46800:
                 user_mention = ""
                 check_posts.change_interval(seconds=60)
             else:
