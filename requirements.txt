@@ -2,4 +2,4 @@ aiohttp
 asyncpraw
 discord.py
 requests
-flask
+# flask
