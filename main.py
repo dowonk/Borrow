@@ -6,7 +6,7 @@ import aiohttp
 import asyncpraw
 import discord
 from discord.ext import commands, tasks
-import webserver
+# import webserver
 
 COMMERCE_SUBS = frozenset({"aftershocktickets", "airsoftmarket", "airsoftmarketcanada", "animalcrossingamiibos", "animedeals", "appleswap", "assistance", "avatartrading", "avexchange", "campfloggnawbuysell", "canadianhardwareswap", "canadianknifeswap", "caps", "care", "cash4cash", "charity", "coinsales", "comicswap", "digitalcodesell", "discexchange", "disneypinswap", "donedirtcheap", "edcexchange", "fightsticksforsale", "flashlight", "flyfishingexchange", "food_pantry", "fragranceswap", "funkoswap", "gamesale", "gameswap", "gametrade", "gear4sale", "geartrade", "giftcardexchange", "giftofgames", "gofundme", "hardwareswap", "hardwareswapuk", "hireagirlfriend", "hockeyjerseys", "homelabsales", "hutcoinsales", "igsrep", "indiegameswap", "itunesdeals", "jewelryforsale", "knife_swap", "labubuswap", "legomarket", "letstradepedals", "lolboosting", "machinedpens", "mangaswap", "mechmarket", "mediaswap", "miniswap", "mousemarket", "nba2kmtselling", "nbarep", "need", "overwatchboosting", "pen_swap", "periodpantry", "phoneverification", "photomarket", "pkmntcgtrades", "playingcardsmarket", "pmsforsale", "pokemongotrade", "random_acts_of_amazon", "random_acts_of_pizza", "randomactsofchristmas", "randomactsofpetfood", "randomactsoftacobell", "randomkindness", "referral", "referrals", "rpgtrade", "sgsflair", "shave_bazaar", "signupsforpay", "silverbugbets", "slavelabour", "snackexchange", "sneakermarket", "starcitizen_trades", "steamgameswap", "thinkpadsforsale", "ulgeartrade", "universalscammerlist", "uvtrade", "vinylcollectors", "watchexchange", "watchexchangecanada", "ygomarketplace"})
 LENDING_SUBS = frozenset({"borrownew", "loancentral", "loanhelp_", "loansharks", "loanspaydayonline", "simpleloans"})
@@ -260,5 +260,5 @@ async def on_ready():
     await CHECK_CHANNEL.send("Booted Up!")
     check_posts.start()
 
-webserver.keep_alive()
+# webserver.keep_alive()
 bot.run(os.environ['TOKEN'])
