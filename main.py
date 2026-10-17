@@ -164,7 +164,7 @@ async def check_posts():
             utc_hour = int(post.created_utc) % 86400
             if 25200 < utc_hour < 46800:
                 user_mention = ""
-                check_posts.change_interval(seconds=60)
+                check_posts.change_interval(seconds=300)
             else:
                 user_mention = "<@314300380051668994>"
                 if check_posts.seconds == 60: check_posts.change_interval(seconds=.7)
