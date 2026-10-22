@@ -143,6 +143,14 @@ async def get_user_posts(redditor):
 async def check_posts():
     try:
         now = time.time()
+        utc_hour = int(now) % 86400
+        if 25200 < utc_hour < 46800:
+            user_mention = ""
+            check_posts.change_interval(seconds=60)
+        else:
+            user_mention = "<@314300380051668994>"
+            if check_posts.seconds == 60: check_posts.change_interval(seconds=.7)
+                
         async for post in SUBREDDIT.new(limit=2):
             if post.id in HISTORY_IDS or post.created_utc < now - 3600:
                 continue
@@ -160,15 +168,7 @@ async def check_posts():
                     or amount > 1000
                     or any(text in selftext_l for text in PREARRANGED_SELFTEXT)):
                 continue
-
-            utc_hour = int(post.created_utc) % 86400
-            if 25200 < utc_hour < 46800:
-                user_mention = ""
-                check_posts.change_interval(seconds=300)
-            else:
-                user_mention = "<@314300380051668994>"
-                if check_posts.seconds == 60: check_posts.change_interval(seconds=.7)
-
+                        
             message = (
                 f"{user_mention}[{post.id}]\n"
                 f"**[{post.title}](<{post.url}>)**\n"
