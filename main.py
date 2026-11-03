@@ -21,6 +21,9 @@ HISTORY_IDS = []
 RE_AMOUNT = re.compile(r"\d+")
 RE_HISTORY = re.compile(r'\[(.*?)\]')
 
+os.environ['TZ'] = 'US/Pacific'
+time.tzset()
+
 HTTP_SESSION = None
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -143,8 +146,7 @@ async def get_user_posts(redditor):
 async def check_posts():
     try:
         now = time.time()
-        utc_hour = int(now) % 86400
-        if 25200 < utc_hour < 46800:
+        if time.localtime().tm_hour < 6:
             user_mention = ""
             check_posts.change_interval(seconds=60)
         else:
